@@ -76,4 +76,27 @@ for (const fixture of fixtures) {
 
   }
 
+  //Save to DB
+
+  for (const group of Object.keys(standings)) { //extract group names only and turns objects into arrays
+    const groupTeams = Object.values(standings[group]);
+
+    groupTeams.sort((a, b) => {
+      if (b.points !== a.points) return b.points - a.points;
+      if (b.goalDifference !== a.goalDifference) return b.goalDifference - a.goalDifference;
+      return b.goalsFor - a.goalsFor;
+    })
+
+    for (let i = 0; i < groupTeams.length; i++) {
+      const teamStats = groupTeams[i];
+      teamStats.position = i + 1;
+
+      await GroupStanding.findOneAndUpdate(
+        { group, team: teamStats.team },
+        { $set: teamStats },
+        { upsert: true, new: true} //upsert: true - If the document doesnt exist, create it
+        // new: true - return the updated document, not the old one
+      );
+    }
+  }
 }
