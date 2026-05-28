@@ -55,3 +55,22 @@ const getUsers = asyncHandler(async (req, res) => {
     pagination: { total, page: parseInt(page), limit: parseInt(limit) },
   });
 });
+
+// PUT /api/admin/users/:id/role
+
+const updateUserRole = asyncHandler(async (req, res) => {
+  const { role } = req.body;
+  if (!['user', 'admin'].includes(role)) {
+    return res.status(400).json({ error: 'Invalid role' });
+  }
+
+  const user = await User.findByIdAndUpdate(
+    req.params.id,
+    { role },
+    { new: true }
+  );
+
+  if (!user) return res.status(400).json({ error: 'User not found' });
+
+  res.json({ user });
+})
