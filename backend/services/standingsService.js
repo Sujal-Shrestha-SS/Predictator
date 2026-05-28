@@ -2,6 +2,8 @@ const Fixture = require('../models/Fixture');
 const GroupStanding = require('../models/GroupStanding');
 const Team = require('../models/Team');
 
+// Recalculate group standings based on completed group stage fixtures
+
 const recalculateGroupStandings = async () => {
   //Get all completed group stage fixtures
 
@@ -81,6 +83,7 @@ for (const fixture of fixtures) {
   for (const group of Object.keys(standings)) { //extract group names only and turns objects into arrays
     const groupTeams = Object.values(standings[group]);
 
+    // Sort: points > goal difference > goals For
     groupTeams.sort((a, b) => {
       if (b.points !== a.points) return b.points - a.points;
       if (b.goalDifference !== a.goalDifference) return b.goalDifference - a.goalDifference;
@@ -99,4 +102,13 @@ for (const fixture of fixtures) {
       );
     }
   }
+}
+
+
+// Get standings for a specific group
+
+const getGroupStandings = async (group) => {
+  return GroupStanding.find({ group })
+    .populate('team', 'name shortName logo flagUrl code')
+    .sort({ points: -1, goalDifference: -1, goalsFor: -1});
 }
