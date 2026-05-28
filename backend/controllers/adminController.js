@@ -73,4 +73,11 @@ const updateUserRole = asyncHandler(async (req, res) => {
   if (!user) return res.status(400).json({ error: 'User not found' });
 
   res.json({ user });
+});
+
+// GET /api/admin/teams
+
+const getTeams = asyncHandler(async (req, res) => {
+  const teams = await Team.find().sort({ name: 1 });
+  res.json({ teams });
 })
