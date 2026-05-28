@@ -81,3 +81,27 @@ const getTeams = asyncHandler(async (req, res) => {
   const teams = await Team.find().sort({ name: 1 });
   res.json({ teams });
 })
+
+// POST /api/admin/teams
+
+const createTeam = asyncHandler(async (req, res) => {
+  const team = await Team.create(req.body);
+  res.status(201).json({ team });
+})
+
+// PUT /api/admin/teams/:id
+
+const updateTeam = asyncHandler(async (req, res) => {
+  const team = await Team.findByIdAndUpdate(req.params.id, req.body, { new: true });
+  if(!team) return res.status(404).json({ error: 'Team not found' });
+  res.json({ team });
+})
+
+module.exports = {
+  getDashboardStats,
+  getUsers,
+  updateUserRole,
+  getTeams,
+  createTeam,
+  updateTeam
+}
