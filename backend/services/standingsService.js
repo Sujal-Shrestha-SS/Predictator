@@ -40,5 +40,40 @@ for (const fixture of fixtures) {
         points: 0,
       };
     }
+  
+
+  initTeam(homeTeam);
+  initTeam(awayTeam);
+
+  const homeStats = standings[group][homeTeam._id.toString()];
+  const awayStats = standings[group][awayTeam._id.toString()];
+  const { homeScore, awayScore } = result;
+
+  homeStats.played++;
+  awayStats.played++;
+  homeStats.goalsFor += homeScore;
+  homeStats.goalsAgainst += awayScore;
+  awayStats.goalsFor += awayScore;
+  awayStats.goalsAgainst += homeScore;
+
+  if(homeScore > awayScore) {
+    homeStats.won++;
+    homeStats.points += 3;
+    awayStats.lost++;
+  } else if (homeScore < awayScore) {
+    awayStats.won++;
+    awayStats.points += 3;
+    homeStats.lost++;
+  } else {
+    homeStats.drawn++;
+    awayStats.drawn++;
+    homeStats.points++;
+    awayStats.points++;
   }
+
+    homeStats.goalDifference = homeStats.goalsFor - homeStats.goalsAgainst;
+    awayStats.goalDifference = awayStats.goalsFor - awayStats.goalsAgainst;
+
+  }
+
 }
