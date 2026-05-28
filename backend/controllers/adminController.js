@@ -97,6 +97,24 @@ const updateTeam = asyncHandler(async (req, res) => {
   res.json({ team });
 })
 
+// GET /api/admin/fixtures
+// Fetches a list of fixtures for the admin panel, with optional filters
+const getAdminFixtures = asyncHandler(async (req, res) => {
+  const { status, stage, group } = req.query;
+
+  const filter = {};
+  if (status) filter.status = status;
+  if (stage) filter.stage = stage;
+  if (group) filter.group = group;
+
+  const fixtures = await Fixture.find(filter)
+    .populate('homeTeam', 'name shortName code flagUrl')
+    .populate('awayTeam', 'name shortName code flagUrl')
+    .sort({ matchDatetime: 1 });
+
+  res.json({ fixtures });
+
+})
 module.exports = {
   getDashboardStats,
   getUsers,
