@@ -112,3 +112,22 @@ const getGroupStandings = async (group) => {
     .populate('team', 'name shortName logo flagUrl code')
     .sort({ points: -1, goalDifference: -1, goalsFor: -1});
 }
+
+// Get all group standings
+
+const getAllGroupStandings = async () => {
+  const standings = await GroupStanding.find()
+    .populate('team', 'name shortName logo flagUrl code')
+    .sort({ group: 1, points: -1, goalDifference: -1, goalsFor: -1 })
+    
+    // Group by group letter
+    const grouped = standings.reduce((acc, s) => {
+      if (!acc[s.group]) acc[s.group] = [];
+      acc[s.group].push(s);
+      return acc;
+    }, {});
+
+    return grouped;
+  };
+
+  module.exports = { recalculateGroupStandings, getGroupStandings, getAllGroupStandings };
