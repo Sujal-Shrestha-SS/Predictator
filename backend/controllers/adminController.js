@@ -115,11 +115,64 @@ const getAdminFixtures = asyncHandler(async (req, res) => {
   res.json({ fixtures });
 
 })
+
+// PUT /api/admin/fixtures/:id/result
+// sets the final score of a match and triggers scoring updates
+const setFixtureResult = asyncHandler(async (req, res) => {
+  const { homeScore, awayScore } = req.body;
+
+  if (homeScore === undefined || homeScore === null || awayScore === undefined || awayScore === null) {
+    return res.status(400).json({ error: 'homeScore and awayScore are required' });
+  }
+
+  const fixture = await Fixture.findById(req.params.id);
+  if (!fixture) return res.status(404).json({ error: 'Fixture not found' });
+
+  // Reset scoring flag so points get recalculated if result is corrected
+  if (fixture.scoresCalculated) {
+    const Prediction = require('../models/Prediction');
+    await Prediction.updateMany({ fixture: fixture._id }, { isCalculated: false });
+    fixture.scoresCalculated = false;
+
+    // Reset scoring flag so points get recalculated if result is corrected
+    const { recalculateAllPoints } = require('../services/scoringService');
+  }
+
+  let winner = null;
+  if (homeScore > awayScore) winner = 'home';
+  else if (awayScore > homeScore) winner = 'away';
+  else winner = 'draw';
+
+  fixture.result = {
+    homeScore: parseInt(homeScore),
+    awayScore: parseInt(awayScore),
+    winner,
+  }
+
+  fixture.status = 'completed';
+  await fixture.save();
+
+  const { calculatePredictionScores } = require('../services/scoringService');
+  await calculatePredictionScores(fixture._id);
+
+  await fixture.populate([
+    { path: 'homeTeam', select: 'name shortName code flagUrl' },
+    { path: 'awayTeam', select: 'name shortName code flagUrl' },
+  ]);
+
+  res.json({ fixture, message: 'Result saved and point calculated' })
+
+
+});
+
+
 module.exports = {
   getDashboardStats,
   getUsers,
   updateUserRole,
   getTeams,
   createTeam,
-  updateTeam
+  updateTeam,
+  getAdminFixtures,
+  setFixtureResult,
 }
