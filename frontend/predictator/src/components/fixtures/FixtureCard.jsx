@@ -46,6 +46,7 @@ export default function FixtureCard({ fixture, prediction }) {
     matchDatetime,
     stage,
     group,
+    isPredictionOpen
   } = fixture;
 
   const kickoff = new Date(matchDatetime);
@@ -64,9 +65,17 @@ export default function FixtureCard({ fixture, prediction }) {
     return () => clearInterval(interval);
   }, []);
 
-  const isUpcoming = now < kickoff;
-  const isLive = now >= kickoff && now < matchEnd;
-  const isCompleted = now >= matchEnd;
+
+  const hasResult =
+  fixture.result?.homeScore !== null &&
+  fixture.result?.homeScore !== undefined &&
+  fixture.result?.awayScore !== null &&
+  fixture.result?.awayScore !== undefined;
+
+  const isCompleted = hasResult || now >= matchEnd;
+  const isLive = !hasResult && now >= kickoff && now < matchEnd;
+  const isUpcoming = !hasResult && now < kickoff;
+
 
   // Status badge
   const statusBadge = isLive ? (
@@ -123,7 +132,10 @@ export default function FixtureCard({ fixture, prediction }) {
                 </span>
               </>
             ) : (
+              <>
+             
               <span className="text-gray-500 font-semibold">FT</span>
+              </>
             )}
 
           </div>
@@ -140,11 +152,11 @@ export default function FixtureCard({ fixture, prediction }) {
 
           <div className="flex items-center gap-2 flex-shrink-0">
 
-            {isUpcoming && prediction == null && (
+            {isUpcoming && isPredictionOpen &&  !prediction && (
               <span className="badge badge-green text-xs">Predict</span>
             )}
 
-            {isUpcoming && prediction == null && (
+            {isUpcoming && !isPredictionOpen && (
               <span className="text-xs text-[var(--text-secondary)]">
                 Locked
               </span>
