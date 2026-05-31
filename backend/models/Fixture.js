@@ -47,7 +47,7 @@ const fixtureSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['upcoming','completed'],
+    enum: ['upcoming', 'live', 'completed'],
     default: 'upcoming',
     index: true,
   },
@@ -76,11 +76,11 @@ const fixtureSchema = new mongoose.Schema({
 });
 
 // Set prediction deadline before saving
-fixtureSchema.pre('save', function (next) {
+fixtureSchema.pre('save', function(next) {
   if (this.matchDatetime && !this.predictionDeadline) {
     this.predictionDeadline = new Date(this.matchDatetime.getTime() - 60 * 60 * 1000);
   }
-  next();
+  
 });
 
 // Virtual: is prediction open
