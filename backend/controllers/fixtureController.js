@@ -83,6 +83,17 @@ const getUpcoming = asyncHandler(async (req, res) => {
 });
 
 
+// GET /api/fixtures/live
+
+const getLive = asyncHandler(async (req, res) => {
+  const fixtures = await Fixture.find({ status: 'live '})
+    .populate('homeTeam', 'name shortName logo flagUrl code')
+    .populate('awayTeam', 'name shortName logo flagUrl code')
+    .sort({ matchDatetime: 1 })
+
+  res.json({ fixtures })
+})
+
 
 // GET /api/fixtures/stage/:stage
 const getByStage = asyncHandler(async (req, res) => {
@@ -129,6 +140,7 @@ module.exports = {
   getFixtures,
   getFixture,
   getUpcoming,
+  getLive,
   getByStage,
   updateResult,
   
