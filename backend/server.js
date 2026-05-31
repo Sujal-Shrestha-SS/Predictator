@@ -25,7 +25,8 @@ app.use(helmet());
 app.use(cors({
   origin: [
     'http://localhost:3000',
-    process.env.FRONTEND_URL,
+    'https://predictatorr.vercel.app',
+     process.env.FRONTEND_URL,
   ].filter(Boolean),
   credentials: true,
 }));
