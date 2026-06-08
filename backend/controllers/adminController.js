@@ -65,6 +65,74 @@ const updateTeam = asyncHandler(async (req, res) => {
   res.json({ team });
 });
 
+// POST /api/admin/sync/fixtures
+const triggerFixtureSync = asyncHandler(async (req, res) => {
+  const count = await syncFixtures();
+  res.json({ message: `Synced ${count} fixtures` });
+});
+
+// POST /api/admin/sync/teams
+const triggerTeamSync = asyncHandler(async (req, res) => {
+  const count = await syncTeams();
+  res.json({ message: `Synced ${count} teams` });
+});
+
+// POST /api/admin/recalculate-points
+const triggerPointsRecalculation = asyncHandler(async (req, res) => {
+  await recalculateAllPoints();
+  res.json({ message: 'Points recalculated for all users' });
+});
+
+// POST /api/admin/recalculate-standings
+const triggerStandingsRecalculation = asyncHandler(async (req, res) => {
+  await recalculateGroupStandings();
+  res.json({ message: 'Group standings recalculated' });
+});
+
+// POST /api/admin/generate-knockout
+const generateKnockout = asyncHandler(async (req, res) => {
+  const GroupStanding = require('../models/GroupStanding');
+
+  // Get top 2 from each group (and best 3rd-placed teams for WC 2026 format)
+  const allGroups = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'];
+  const qualifiedTeams = [];
+
+  for (const group of allGroups) {
+    const standings = await GroupStanding.find({ group })
+      .populate('team')
+      .sort({ points: -1, goalDifference: -1, goalsFor: -1 })
+      .limit(2);
+    
+    qualifiedTeams.push(...standings.map((s) => ({ team: s.team, group, position: s.position })));
+  }
+
+  // Pair teams for Round of 32 (simplified - real pairing follows FIFA rules)
+  const fixtures = [];
+  for (let i = 0; i < qualifiedTeams.length; i += 2) {
+    if (qualifiedTeams[i + 1]) {
+      fixtures.push({
+        homeTeam: qualifiedTeams[i].team._id,
+        awayTeam: qualifiedTeams[i + 1].team._id,
+        stage: 'round_of_32',
+        stadium: 'TBD',
+        city: 'TBD',
+        matchDatetime: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+        status: 'upcoming',
+      });
+    }
+  }
+
+  const created = await Fixture.insertMany(
+    fixtures.map((f) => ({
+      ...f,
+      predictionDeadline: new Date(f.matchDatetime.getTime() - 60 * 60 * 1000),
+    }))
+  );
+
+  res.json({ message: `Generated ${created.length} Round of 32 fixtures`, fixtures: created });
+});
+
+
 // GET /api/admin/fixtures
 const getAdminFixtures = asyncHandler(async (req, res) => {
   const { status, stage, group } = req.query;
@@ -131,6 +199,11 @@ module.exports = {
   getTeams,
   createTeam,
   updateTeam,
+  triggerFixtureSync,
+  triggerTeamSync,
+  triggerPointsRecalculation,
+  triggerStandingsRecalculation,
+  generateKnockout,
   getAdminFixtures,
   setFixtureResult,
 };
