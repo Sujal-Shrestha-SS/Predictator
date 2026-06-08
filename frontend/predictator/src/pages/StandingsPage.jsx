@@ -28,9 +28,10 @@ function GroupTable({ group, standings }) {
             {standings.map((s, i) => (
               <tr
                 key={s._id}
-                className={`transition-colors hover:bg-[var(--bg-secondary)] ${i < 2 ? 'border-l-4 border-l-green-500' : ''}`}
+                className={`transition-colors hover:bg-[var(--bg-secondary)] `}
               >
-                <td className="px-3 py-2.5 text-[var(--text-secondary)] text-xs font-mono">{i + 1}</td>
+                <td className={`px-3 py-2.5 text-[var(--text-secondary)] text-xs font-mono ${i < 2 ? 'border-l-4 border-l-green-500' : i === 2
+      ? 'border-l-4 border-l-yellow-500' : ''}`}>{i + 1}</td>
                 <td className="px-3 py-2.5">
                   <div className="flex items-center gap-2">
                     {s.team?.flagUrl ? (
@@ -69,10 +70,17 @@ function GroupTable({ group, standings }) {
         </table>
       </div>
       <div className="px-4 py-2 bg-[var(--bg-secondary)] border-t border-[var(--border)]">
-        <span className="text-xs text-[var(--text-secondary)]">
-          <span className="inline-block w-3 h-3 bg-green-500 rounded-sm mr-1" />
-          Qualified for Round of 32
-        </span>
+        <div className="flex flex-wrap gap-4 text-xs text-[var(--text-secondary)]">
+          <span className="flex items-center">
+            <span className="w-3 h-3 bg-green-500 rounded-sm mr-1" />
+            Qualified for Round of 32
+          </span>
+
+          <span className="flex items-center">
+            <span className="w-3 h-3 bg-yellow-500 rounded-sm mr-1" />
+            Still alive (best 3rd place teams)
+          </span>
+        </div>
       </div>
     </div>
   );
