@@ -489,15 +489,37 @@ export default function AdminPage() {
             </div>
           </div>
 
-          <div className="card p-6">
-            <h3 className="font-display text-xl text-[var(--text-primary)] mb-4">KNOCKOUT STAGE</h3>
-            <p className="text-sm text-[var(--text-secondary)] mb-4">
-              Generate Round of 32 fixtures from group standings. Ensure all group matches are completed first.
-            </p>
-            <ActionButton label="Generate Knockout Bracket" icon="⚡" color="btn-primary"
-              loading={loadingAction === 'gen-knockout'}
-              onClick={() => doAction('gen-knockout', () => api.post('/admin/generate-knockout'), 'Knockout bracket generated!')} />
-          </div>
+          {/* Tools tab — replace the existing knockout card with this */}
+            <div className="card p-6">
+              <h3 className="font-display text-xl text-[var(--text-primary)] mb-2">
+                KNOCKOUT STAGE
+              </h3>
+              <p className="text-sm text-[var(--text-secondary)] mb-4">
+                Generates the next round automatically based on current results.
+                All fixtures in the current stage must be completed first.
+              </p>
+
+              {/* Show what round will be generated */}
+              {stats && (
+                <p className="text-xs text-primary-500 mb-4 font-medium">
+                  Next round to generate: {stats.nextKnockoutStage || 'Round of 32'}
+                </p>
+              )}
+
+              <ActionButton
+                label={`Generate ${stats?.nextKnockoutStage || 'Round of 32'}`}
+                icon="⚡"
+                color="btn-primary"
+                loading={loadingAction === 'gen-knockout'}
+                onClick={() =>
+                  doAction(
+                    'gen-knockout',
+                    () => api.post('/admin/generate-knockout'),
+                    'Knockout round generated!'
+                  )
+                }
+              />
+            </div>
         </div>
       )}
 
