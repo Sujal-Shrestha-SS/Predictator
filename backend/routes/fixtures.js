@@ -13,6 +13,9 @@ router.get('/stage/:stage', getByStage);
 router.get('/:id', getFixture);
 
 // Admin routes
+router.post('/', authenticate, requireAdmin, createFixture);
+router.put('/:id', authenticate, requireAdmin, updateFixture);
 router.put('/:id/result', authenticate, requireAdmin, updateResult);
+router.delete('/:id', authenticate, requireAdmin, deleteFixture);
 
 module.exports = router;
