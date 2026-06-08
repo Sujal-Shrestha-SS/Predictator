@@ -37,7 +37,7 @@ const WC_2026_TEAMS = [
 
   // Group E
   { name: 'Germany',        shortName: 'GER', code: 'GER', group: 'E', confederation: 'UEFA',     flagUrl: 'https://flagcdn.com/de.svg' },
-  { name: 'Curacao',        shortName: 'CUR', code: 'CUR', group: 'E', confederation: 'CONMEBOL', flagUrl: 'https://flagcdn.com/br.svg' },
+  { name: 'Curacao',        shortName: 'CUR', code: 'CUR', group: 'E', confederation: 'CONMEBOL', flagUrl: 'https://flagcdn.com/cw.svg' },
   { name: 'Ivory Coast',    shortName: 'CIV', code: 'CIV', group: 'E', confederation: 'CAF',      flagUrl: 'https://flagcdn.com/ci.svg' },
   { name: 'Ecuador',        shortName: 'ECU', code: 'ECU', group: 'E', confederation: 'CONMEBOL', flagUrl: 'https://flagcdn.com/ec.svg' },
 
