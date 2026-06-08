@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const {
   getFixtures, getFixture, getUpcoming, getLive,
-  getByStage, updateResult, 
+  getByStage, createFixture, updateFixture, updateResult, deleteFixture
 } = require('../controllers/fixtureController');
 const { authenticate, requireAdmin } = require('../middleware/auth');
 
