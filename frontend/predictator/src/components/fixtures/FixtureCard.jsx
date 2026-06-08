@@ -4,6 +4,12 @@ import { format, formatDistanceToNow } from 'date-fns';
 
 const stageLabelMap = {
   group_stage: 'Group Stage',
+  round_of_32: 'Round of 32',
+  round_of_16: 'Round of 16',
+  quarterfinal: 'Quarterfinal',
+  semifinal: 'Semifinal',
+  third_place: '3rd Place',
+  final: 'FINAL',
 };
 
 const TeamDisplay = ({ team, side, score }) => (
