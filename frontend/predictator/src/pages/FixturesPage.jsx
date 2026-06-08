@@ -6,6 +6,12 @@ import { SkeletonCard } from '../components/common/LoadingScreen';
 const STAGES = [
   { value: '', label: 'All Stages' },
   { value: 'group_stage', label: 'Group Stage' },
+  { value: 'round_of_32', label: 'Round of 32' },
+  { value: 'round_of_16', label: 'Round of 16' },
+  { value: 'quarterfinal', label: 'Quarterfinals' },
+  { value: 'semifinal', label: 'Semifinals' },
+  { value: 'third_place', label: 'Third Place' },
+  { value: 'final', label: 'Final' },
  
 ];
 
