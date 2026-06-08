@@ -106,6 +106,62 @@ const getByStage = asyncHandler(async (req, res) => {
 });
 
 
+// ADMIN: POST /api/fixtures
+const createFixture = asyncHandler(async (req, res) => {
+  const {
+    homeTeamId, awayTeamId, stadium, city, country,
+    matchDatetime, stage, group, matchNumber,
+  } = req.body;
+
+  const [homeTeam, awayTeam] = await Promise.all([
+    Team.findById(homeTeamId),
+    Team.findById(awayTeamId),
+  ]);
+
+  if (!homeTeam || !awayTeam) {
+    return res.status(404).json({ error: 'One or both teams not found' });
+  }
+
+  const kickoff = new Date(matchDatetime);
+  const predictionDeadline = new Date(kickoff.getTime() - 60 * 60 * 1000);
+
+  const fixture = await Fixture.create({
+    homeTeam: homeTeamId,
+    awayTeam: awayTeamId,
+    stadium,
+    city,
+    country,
+    matchDatetime: kickoff,
+    predictionDeadline,
+    stage,
+    group,
+    matchNumber,
+  });
+
+  await fixture.populate([
+    { path: 'homeTeam', select: 'name shortName logo flagUrl code' },
+    { path: 'awayTeam', select: 'name shortName logo flagUrl code' },
+  ]);
+
+  res.status(201).json({ fixture });
+});
+
+
+// ADMIN: PUT /api/fixtures/:id
+const updateFixture = asyncHandler(async (req, res) => {
+  const fixture = await Fixture.findByIdAndUpdate(
+    req.params.id,
+    { $set: req.body },
+    { new: true, runValidators: true }
+  ).populate('homeTeam awayTeam');
+
+  if (!fixture) {
+    return res.status(404).json({ error: 'Fixture not found' });
+  }
+
+  res.json({ fixture });
+});
+
 // ADMIN: PUT /api/fixtures/:id/result
 const updateResult = asyncHandler(async (req, res) => {
   const { homeScore, awayScore, extraTime, penalties, penaltyHomeScore, penaltyAwayScore } = req.body;
@@ -135,6 +191,15 @@ const updateResult = asyncHandler(async (req, res) => {
   res.json({ fixture, message: 'Result updated and scores calculated' });
 });
 
+// ADMIN: DELETE /api/fixtures/:id
+const deleteFixture = asyncHandler(async (req, res) => {
+  const fixture = await Fixture.findByIdAndDelete(req.params.id);
+  if (!fixture) {
+    return res.status(404).json({ error: 'Fixture not found' });
+  }
+  res.json({ message: 'Fixture deleted' });
+});
+
 
 module.exports = {
   getFixtures,
@@ -142,6 +207,8 @@ module.exports = {
   getUpcoming,
   getLive,
   getByStage,
+  createFixture,
+  updateFixture,
   updateResult,
-  
+  deleteFixture,
 };
