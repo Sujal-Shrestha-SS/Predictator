@@ -8,12 +8,22 @@ const { recalculateGroupStandings } = require('../services/standingsService');
 
 // GET /api/admin/stats
 const getDashboardStats = asyncHandler(async (req, res) => {
+  const STAGE_ORDER = ['group_stage', 'round_of_32', 'round_of_16', 'quarterfinal', 'semifinal'];
+
+  const NEXT_STAGE_KEY = {
+    group_stage:  'round_of_32',
+    round_of_32:  'round_of_16',
+    round_of_16:  'quarterfinal',
+    quarterfinal: 'semifinal',
+    semifinal:    'final',
+  };
+
   const NEXT_STAGE_LABEL = {
     group_stage:  'Round of 32',
     round_of_32:  'Round of 16',
     round_of_16:  'Quarterfinal',
     quarterfinal: 'Semifinal',
-    semifinal:    'Final',
+    semifinal:    'Final + Third Place',
   };
 
   const [users, fixtures, predictions, completedMatches] = await Promise.all([
@@ -23,14 +33,71 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     Fixture.countDocuments({ status: 'completed' }),
   ]);
 
-  // Determine next knockout stage to generate
-  const completedStages = await Fixture.distinct('stage', { status: 'completed' });
-  const STAGE_ORDER = ['group_stage','round_of_32','round_of_16','quarterfinal','semifinal'];
-  let nextKnockoutStage = 'Round of 32';
-  for (const stage of [...STAGE_ORDER].reverse()) {
-    if (completedStages.includes(stage)) {
-      nextKnockoutStage = NEXT_STAGE_LABEL[stage] || 'Tournament Complete';
+  // Build a map of each stage's state
+  const stageStats = {};
+  for (const stage of [...STAGE_ORDER, 'final', 'third_place']) {
+    const total      = await Fixture.countDocuments({ stage });
+    const completed  = await Fixture.countDocuments({ stage, status: 'completed' });
+    stageStats[stage] = { total, completed, pending: total - completed };
+  }
+
+  // Determine knockout button state
+  // Always show a button — but it may be disabled with a reason
+  let knockoutButton = {
+    label:    'Set Up Round of 32',   // button text
+    action:   'setup',                // 'setup' | 'auto' | 'complete' | null
+    disabled: false,
+    reason:   null,                   // shown when disabled
+  };
+
+  // Walk stages in order to find current position
+  for (const stage of STAGE_ORDER) {
+    const curr = stageStats[stage];
+    const nextKey = NEXT_STAGE_KEY[stage];
+
+    if (curr.total === 0) {
+      // This stage doesn't exist yet — shouldn't happen for group_stage
+      // but for knockout stages means we haven't generated it yet
       break;
+    }
+
+    if (curr.pending > 0) {
+      // Current stage is still in progress — button exists but is disabled
+      knockoutButton = {
+        label:    stage === 'group_stage'
+          ? 'Set Up Round of 32'
+          : `Generate ${NEXT_STAGE_LABEL[stage]}`,
+        action:   stage === 'group_stage' ? 'setup' : 'auto',
+        disabled: true,
+        reason:   `Complete all ${stage.replace(/_/g, ' ')} fixtures first (${curr.pending} remaining)`,
+      };
+      break;
+    }
+
+    // Current stage is fully complete — check if next stage exists
+    const nextExists = nextKey ? stageStats[nextKey]?.total > 0 : false;
+
+    if (!nextExists && nextKey) {
+      // Next stage not generated yet — button is active
+      knockoutButton = {
+        label:    `Generate ${NEXT_STAGE_LABEL[stage]}`,
+        action:   stage === 'group_stage' ? 'setup' : 'auto',
+        disabled: false,
+        reason:   null,
+      };
+      break;
+    }
+
+    // Next stage exists — continue loop to check further
+    if (!nextKey) {
+      // We've reached semifinals and it's complete — check final
+      const finalDone = stageStats['final']?.completed > 0;
+      knockoutButton = {
+        label:    finalDone ? 'Tournament Complete 🏆' : 'Generate Final + Third Place',
+        action:   finalDone ? 'complete' : 'auto',
+        disabled: false,
+        reason:   null,
+      };
     }
   }
 
@@ -40,7 +107,7 @@ const getDashboardStats = asyncHandler(async (req, res) => {
       fixtures,
       predictions,
       completedMatches,
-      nextKnockoutStage,
+      knockoutButton,
     },
   });
 });
@@ -117,53 +184,132 @@ const triggerStandingsRecalculation = asyncHandler(async (req, res) => {
   res.json({ message: 'Group standings recalculated' });
 });
 
-// POST /api/admin/generate-knockout
-const generateKnockout = asyncHandler(async (req, res) => {
+// POST /api/admin/generate-knockout/round-of-32
+// Saves the 16 manually entered R32 fixtures
+const saveRoundOf32 = asyncHandler(async (req, res) => {
   const Fixture = require('../models/Fixture');
-  const GroupStanding = require('../models/GroupStanding');
+  const { fixtures } = req.body; // array of 16 { homeTeamId, awayTeamId, matchNumber }
 
-  const STAGE_LABELS = {
-    round_of_32:  'Round of 32',
-    round_of_16:  'Round of 16',
-    quarterfinal: 'Quarterfinal',
-    semifinal:    'Semifinal',
-    third_place:  'Third Place',
-    final:        'Final',
+  if (!fixtures || fixtures.length !== 16) {
+    return res.status(400).json({ error: 'Exactly 16 fixtures required' });
+  }
+
+  // Block if group stage not fully complete
+  const incompleteGroup = await Fixture.countDocuments({
+    stage: 'group_stage',
+    status: { $ne: 'completed' },
+  });
+  if (incompleteGroup > 0) {
+    return res.status(400).json({
+      error: 'Complete all group stage fixtures before generating Round of 32',
+    });
+  }
+
+  // Block if R32 already exists
+  const existing = await Fixture.countDocuments({ stage: 'round_of_32' });
+  if (existing > 0) {
+    return res.status(400).json({ error: 'Round of 32 fixtures already exist' });
+  }
+
+  // Official R32 dates and venues (no stadium names per requirement)
+  const FIXTURE_META = {
+    73:  { date: '2026-06-28T17:00:00Z'   },
+    74:  { date: '2026-06-29T17:00:00Z'   },
+    75:  { date: '2026-06-29T20:00:00Z' },
+    76:  { date: '2026-06-29T23:00:00Z' },
+    77:  { date: '2026-06-30T17:00:00Z' },
+    78:  { date: '2026-06-30T20:00:00Z' },
+    79:  { date: '2026-06-30T23:00:00Z' },
+    80:  { date: '2026-07-01T17:00:00Z' },
+    81:  { date: '2026-07-01T20:00:00Z' },
+    82:  { date: '2026-07-01T23:00:00Z' },
+    83:  { date: '2026-07-02T17:00:00Z' },
+    84:  { date: '2026-07-02T20:00:00Z' },
+    85:  { date: '2026-07-02T23:00:00Z' },
+    86:  { date: '2026-07-03T17:00:00Z' },
+    87:  { date: '2026-07-03T20:00:00Z' },
+    88:  { date: '2026-07-03T23:00:00Z' },
   };
 
- 
+  const docs = fixtures.map((f) => {
+    const meta = FIXTURE_META[f.matchNumber];
+    if (!meta) throw new Error(`Invalid match number: ${f.matchNumber}`);
+    return {
+      homeTeam:           f.homeTeamId,
+      awayTeam:           f.awayTeamId,
+      stage:              'round_of_32',
+      matchNumber:        f.matchNumber,
+      matchDatetime:      new Date(meta.date),
+      predictionDeadline: new Date(new Date(meta.date).getTime() - 60 * 60 * 1000),
+      status:             'upcoming',
+    };
+  });
 
-  // ── Helper: get top N from a group ──────────────────────────────────────────
-  const getGroupStandings = async (group) => {
-    return GroupStanding.find({ group })
-      .populate('team')
-      .sort({ points: -1, goalDifference: -1, goalsFor: -1 });
-  };
+  await Fixture.insertMany(docs);
 
-  const getWinner = (fixture) => {
-    if (!fixture.result) return null;
-    return fixture.result.winner === 'home' ? fixture.homeTeam : fixture.awayTeam;
-  };
+  res.json({
+    message: 'Round of 32 saved — 16 fixtures created',
+    fixturesCreated: docs.length,
+  });
+});
 
-  const getLoser = (fixture) => {
-    if (!fixture.result) return null;
-    return fixture.result.winner === 'home' ? fixture.awayTeam : fixture.homeTeam;
-  };
 
-  // ── Determine next stage ────────────────────────────────────────────────────
-  const STAGE_ORDER = [
-    'group_stage', 'round_of_32', 'round_of_16',
-    'quarterfinal', 'semifinal',
-  ];
+const resetRoundOf32 = asyncHandler(async (req, res) => {
+  const Fixture = require('../models/Fixture');
+
+  // Block reset if any R32 fixture has a result already
+  const completed = await Fixture.countDocuments({
+    stage: 'round_of_32',
+    status: 'completed',
+  });
+  if (completed > 0) {
+    return res.status(400).json({
+      error: 'Cannot reset Round of 32 — some matches already have results entered',
+    });
+  }
+
+  await Fixture.deleteMany({ stage: 'round_of_32' });
+  res.json({ message: 'Round of 32 fixtures cleared — you can now reassign teams' });
+});
+
+
+// POST /api/admin/generate-knockout/auto
+// Handles R16, QF, SF, Final+3rd automatically from official bracket
+const generateNextKnockoutRound = asyncHandler(async (req, res) => {
+  const Fixture = require('../models/Fixture');
 
   const NEXT_STAGE = {
-    group_stage:  'round_of_32',
     round_of_32:  'round_of_16',
     round_of_16:  'quarterfinal',
     quarterfinal: 'semifinal',
     semifinal:    'final',
   };
 
+  const STAGE_LABELS = {
+    round_of_16:  'Round of 16',
+    quarterfinal: 'Quarterfinal',
+    semifinal:    'Semifinal',
+    final:        'Final + Third Place',
+  };
+
+  const getWinner = (fixture) => {
+    if (!fixture?.result) return null;
+    return fixture.result.winner === 'home' ? fixture.homeTeam : fixture.awayTeam;
+  };
+  const getLoser = (fixture) => {
+    if (!fixture?.result) return null;
+    return fixture.result.winner === 'home' ? fixture.awayTeam : fixture.homeTeam;
+  };
+  const byMatch = async (matchNumber, stage) => {
+    const f = await Fixture.findOne({ matchNumber, stage });
+    if (!f) throw new Error(`Match ${matchNumber} (${stage}) not found`);
+    const winner = getWinner(f);
+    if (!winner) throw new Error(`Match ${matchNumber} has no result yet`);
+    return winner;
+  };
+
+  // Determine current stage
+  const STAGE_ORDER = ['round_of_32', 'round_of_16', 'quarterfinal', 'semifinal'];
   const completedStages = await Fixture.distinct('stage', { status: 'completed' });
 
   let currentStage = null;
@@ -175,17 +321,17 @@ const generateKnockout = asyncHandler(async (req, res) => {
   }
 
   if (!currentStage) {
-    return res.status(400).json({ error: 'No completed stages found' });
+    return res.status(400).json({ error: 'No completed knockout stage found' });
   }
 
   // Block if current stage has incomplete fixtures
-  const incompleteCurrent = await Fixture.countDocuments({
+  const incomplete = await Fixture.countDocuments({
     stage: currentStage,
     status: { $ne: 'completed' },
   });
-  if (incompleteCurrent > 0) {
+  if (incomplete > 0) {
     return res.status(400).json({
-      error: `Complete all ${STAGE_LABELS[currentStage] || currentStage} fixtures before generating the next round`,
+      error: `Complete all ${STAGE_LABELS[currentStage] || currentStage} fixtures first`,
     });
   }
 
@@ -194,7 +340,6 @@ const generateKnockout = asyncHandler(async (req, res) => {
     return res.status(400).json({ error: 'Tournament is already complete' });
   }
 
-  // Block if next stage already exists
   const alreadyExists = await Fixture.countDocuments({ stage: nextStage });
   if (alreadyExists > 0) {
     return res.status(400).json({
@@ -202,268 +347,111 @@ const generateKnockout = asyncHandler(async (req, res) => {
     });
   }
 
-  // ── ROUND OF 32 ─────────────────────────────────────────────────────────────
-  if (currentStage === 'group_stage') {
-
-    // Get standings for all 12 groups
-    const standings = {};
-    for (const g of 'ABCDEFGHIJKL'.split('')) {
-      standings[g] = await getGroupStandings(g);
-    }
-
-    // Winners and runners-up
-    const W = {}; // group winners
-    const R = {}; // group runners-up
-    for (const g of 'ABCDEFGHIJKL'.split('')) {
-      if (standings[g].length < 2) {
-        return res.status(400).json({ error: `Group ${g} standings incomplete` });
-      }
-      W[g] = standings[g][0].team._id;
-      R[g] = standings[g][1].team._id;
-    }
-
-    // Best 4 third-placed teams
-    // Collect all 3rd place teams across all groups
-    const thirdPlace = [];
-    for (const g of 'ABCDEFGHIJKL'.split('')) {
-      if (standings[g][2]) {
-        thirdPlace.push({
-          group: g,
-          teamId: standings[g][2].team._id,
-          points:          standings[g][2].points,
-          goalDifference:  standings[g][2].goalDifference,
-          goalsFor:        standings[g][2].goalsFor,
-        });
-      }
-    }
-
-    // Sort third place teams — best 4 qualify
-    thirdPlace.sort((a, b) =>
-      b.points - a.points ||
-      b.goalDifference - a.goalDifference ||
-      b.goalsFor - a.goalsFor
-    );
-    const best4Third = thirdPlace.slice(0, 4);
-    const best4Groups = best4Third.map((t) => t.group).sort().join(''); // e.g. "ABCE"
-
-    // Third place team assignment to matches depends on which 4 groups qualify.
-    // Official FIFA assignment table for WC 2026 (12-group format):
-    // This maps the combination of qualifying groups to which match gets which 3rd place team.
-    // Simplified: assign best4Third[0..3] to the 4 matches that need a 3rd place team
-    // Matches 74, 77, 79, 80, 81, 82, 85, 87 can get 3rd place teams depending on bracket
-    // For WC 2026 the specific slot depends on which groups the 3rd place teams come from.
-    // We assign them in rank order to the slots in match number order.
-    const t3 = best4Third.map((t) => t.teamId);
-
-    // Official Round of 32 bracket
-    // Match 73:  R[A] vs R[B]
-    // Match 74:  W[E] vs best 3rd (from A/B/C/D/F)
-    // Match 75:  W[F] vs R[C]
-    // Match 76:  W[C] vs R[F]
-    // Match 77:  W[I] vs best 3rd (from C/D/F/G/H)
-    // Match 78:  R[E] vs R[I]
-    // Match 79:  W[A] vs best 3rd (from C/E/F/H/I)
-    // Match 80:  W[L] vs best 3rd (from E/H/I/J/K)
-    // Match 81:  W[D] vs best 3rd (from B/E/F/I/J)
-    // Match 82:  W[G] vs best 3rd (from A/E/H/I/J) — but we only have 4 3rd place slots
-    // Match 83:  R[K] vs R[L]
-    // Match 84:  W[H] vs R[J]
-    // Match 85:  W[B] vs best 3rd (from E/F/G/I/J)
-    // Match 86:  W[J] vs R[H]
-    // Match 87:  W[K] vs best 3rd (from D/E/I/J/L)
-    // Match 88:  R[D] vs R[G]
-
-    // Assign the 4 third place teams to the 4 third-place slots (matches 74,77,79,80 in order)
-    // This is the simplified version — exact slot depends on FIFA's official assignment table
-    // which is determined after group stage ends. For app purposes rank order is sufficient.
-    const thirdPlaceSlots = [t3[0], t3[1], t3[2], t3[3]];
-
-    const r32Fixtures = [
-      { matchNumber: 73,  home: R['A'], away: R['B'], date: '2026-06-28T17:00:00Z'  },
-      { matchNumber: 74,  home: W['E'], away: thirdPlaceSlots[0], date: '2026-06-29T17:00:00Z'      },
-      { matchNumber: 75,  home: W['F'], away: R['C'], date: '2026-06-29T20:00:00Z'  },
-      { matchNumber: 76,  home: W['C'], away: R['F'], date: '2026-06-29T23:00:00Z'     },
-      { matchNumber: 77,  home: W['I'], away: thirdPlaceSlots[1], date: '2026-06-30T17:00:00Z'  },
-      { matchNumber: 78,  home: R['E'], away: R['I'], date: '2026-06-30T20:00:00Z' },
-      { matchNumber: 79,  home: W['A'], away: thirdPlaceSlots[2], date: '2026-06-30T23:00:00Z' },
-      { matchNumber: 80,  home: W['L'], away: thirdPlaceSlots[3], date: '2026-07-01T17:00:00Z' },
-      { matchNumber: 81,  home: W['D'], away: t3[0],              date: '2026-07-01T20:00:00Z' },
-      { matchNumber: 82,  home: W['G'], away: t3[1],              date: '2026-07-01T23:00:00Z' },
-      { matchNumber: 83,  home: R['K'], away: R['L'], date: '2026-07-02T17:00:00Z' },
-      { matchNumber: 84,  home: W['H'], away: R['J'], date: '2026-07-02T20:00:00Z' },
-      { matchNumber: 85,  home: W['B'], away: t3[2],              date: '2026-07-02T23:00:00Z' },
-      { matchNumber: 86,  home: W['J'], away: R['H'], date: '2026-07-03T17:00:00Z' },
-      { matchNumber: 87,  home: W['K'], away: t3[3],              date: '2026-07-03T20:00:00Z' },
-      { matchNumber: 88,  home: R['D'], away: R['G'], date: '2026-07-03T23:00:00Z' },
-    ];
-
-    const docs = r32Fixtures.map((f) => ({
-      homeTeam:           f.home,
-      awayTeam:           f.away,
-      stage:              'round_of_32',
-      matchNumber:        f.matchNumber,
-      matchDatetime:      new Date(f.date),
-      predictionDeadline: new Date(new Date(f.date).getTime() - 60 * 60 * 1000),
-      status:             'upcoming',
-    }));
-
-    await Fixture.insertMany(docs);
-    return res.json({
-      message: 'Round of 32 generated — 16 fixtures created',
-      stage: 'round_of_32',
-      fixturesCreated: docs.length,
-    });
-  }
-
-  // ── ROUND OF 16 ─────────────────────────────────────────────────────────────
-  // Official bracket: winner of match X plays winner of match Y
+  // ── Round of 16 ────────────────────────────────────────────────────────────
   if (currentStage === 'round_of_32') {
-    const getMatchWinner = async (matchNumber) => {
-      const fixture = await Fixture.findOne({ matchNumber, stage: 'round_of_32' });
-      if (!fixture) throw new Error(`Match ${matchNumber} not found`);
-      return getWinner(fixture);
-    };
-
-    // Official Round of 16 pairings from the document
     const pairings = [
-      { matchNumber: 89, home: await getMatchWinner(74), away: await getMatchWinner(77), date: '2026-07-04T17:00:00Z'  },
-      { matchNumber: 90, home: await getMatchWinner(73), away: await getMatchWinner(75), date: '2026-07-04T21:00:00Z'  },
-      { matchNumber: 91, home: await getMatchWinner(76), away: await getMatchWinner(78), date: '2026-07-05T17:00:00Z'  },
-      { matchNumber: 92, home: await getMatchWinner(79), away: await getMatchWinner(80), date: '2026-07-05T21:00:00Z' },
-      { matchNumber: 93, home: await getMatchWinner(83), away: await getMatchWinner(84), date: '2026-07-06T17:00:00Z' },
-      { matchNumber: 94, home: await getMatchWinner(81), away: await getMatchWinner(82), date: '2026-07-06T21:00:00Z' },
-      { matchNumber: 95, home: await getMatchWinner(86), away: await getMatchWinner(88), date: '2026-07-07T17:00:00Z' },
-      { matchNumber: 96, home: await getMatchWinner(85), away: await getMatchWinner(87), date: '2026-07-07T21:00:00Z' },
+      { matchNumber: 89,  homeFrom: [74,'round_of_32'], awayFrom: [77,'round_of_32'], date: '2026-07-04T17:00:00Z' },
+      { matchNumber: 90,  homeFrom: [73,'round_of_32'], awayFrom: [75,'round_of_32'], date: '2026-07-04T21:00:00Z' },
+      { matchNumber: 91,  homeFrom: [76,'round_of_32'], awayFrom: [78,'round_of_32'], date: '2026-07-05T17:00:00Z' },
+      { matchNumber: 92,  homeFrom: [79,'round_of_32'], awayFrom: [80,'round_of_32'], date: '2026-07-05T21:00:00Z' },
+      { matchNumber: 93,  homeFrom: [83,'round_of_32'], awayFrom: [84,'round_of_32'], date: '2026-07-06T17:00:00Z' },
+      { matchNumber: 94,  homeFrom: [81,'round_of_32'], awayFrom: [82,'round_of_32'], date: '2026-07-06T21:00:00Z' },
+      { matchNumber: 95,  homeFrom: [86,'round_of_32'], awayFrom: [88,'round_of_32'], date: '2026-07-07T17:00:00Z' },
+      { matchNumber: 96,  homeFrom: [85,'round_of_32'], awayFrom: [87,'round_of_32'], date: '2026-07-07T17:00:00Z' },
     ];
 
-    const docs = pairings.map((f) => ({
-      homeTeam:           f.home,
-      awayTeam:           f.away,
+    const docs = await Promise.all(pairings.map(async (p) => ({
+      homeTeam:           await byMatch(p.homeFrom[0], p.homeFrom[1]),
+      awayTeam:           await byMatch(p.awayFrom[0], p.awayFrom[1]),
       stage:              'round_of_16',
-      matchNumber:        f.matchNumber,
-      matchDatetime:      new Date(f.date),
-      predictionDeadline: new Date(new Date(f.date).getTime() - 60 * 60 * 1000),
+      matchNumber:        p.matchNumber,
+      matchDatetime:      new Date(p.date),
+      predictionDeadline: new Date(new Date(p.date).getTime() - 60 * 60 * 1000),
       status:             'upcoming',
-    }));
+    })));
 
     await Fixture.insertMany(docs);
-    return res.json({
-      message: 'Round of 16 generated — 8 fixtures created',
-      stage: 'round_of_16',
-      fixturesCreated: docs.length,
-    });
+    return res.json({ message: 'Round of 16 generated — 8 fixtures created', fixturesCreated: docs.length });
   }
 
-  // ── QUARTERFINALS ───────────────────────────────────────────────────────────
+  // ── Quarterfinals ──────────────────────────────────────────────────────────
   if (currentStage === 'round_of_16') {
-    const getMatchWinner = async (matchNumber) => {
-      const fixture = await Fixture.findOne({ matchNumber, stage: 'round_of_16' });
-      if (!fixture) throw new Error(`Match ${matchNumber} not found`);
-      return getWinner(fixture);
-    };
-
     const pairings = [
-      { matchNumber: 97,  home: await getMatchWinner(89), away: await getMatchWinner(90), date: '2026-07-09T21:00:00Z' },
-      { matchNumber: 98,  home: await getMatchWinner(93), away: await getMatchWinner(94), date: '2026-07-10T21:00:00Z' },
-      { matchNumber: 99,  home: await getMatchWinner(91), away: await getMatchWinner(92), date: '2026-07-11T17:00:00Z' },
-      { matchNumber: 100, home: await getMatchWinner(95), away: await getMatchWinner(96), date: '2026-07-11T21:00:00Z' },
+      { matchNumber: 97,  homeFrom: [89,'round_of_16'], awayFrom: [90,'round_of_16'], date: '2026-07-09T21:00:00Z' },
+      { matchNumber: 98,  homeFrom: [93,'round_of_16'], awayFrom: [94,'round_of_16'], date: '2026-07-10T21:00:00Z' },
+      { matchNumber: 99,  homeFrom: [91,'round_of_16'], awayFrom: [92,'round_of_16'], date: '2026-07-11T17:00:00Z' },
+      { matchNumber: 100, homeFrom: [95,'round_of_16'], awayFrom: [96,'round_of_16'], date: '2026-07-11T21:00:00Z' },
     ];
 
-    const docs = pairings.map((f) => ({
-      homeTeam:           f.home,
-      awayTeam:           f.away,
+    const docs = await Promise.all(pairings.map(async (p) => ({
+      homeTeam:           await byMatch(p.homeFrom[0], p.homeFrom[1]),
+      awayTeam:           await byMatch(p.awayFrom[0], p.awayFrom[1]),
       stage:              'quarterfinal',
-      matchNumber:        f.matchNumber,
-      matchDatetime:      new Date(f.date),
-      predictionDeadline: new Date(new Date(f.date).getTime() - 60 * 60 * 1000),
+      matchNumber:        p.matchNumber,
+      matchDatetime:      new Date(p.date),
+      predictionDeadline: new Date(new Date(p.date).getTime() - 60 * 60 * 1000),
       status:             'upcoming',
-    }));
+    })));
 
     await Fixture.insertMany(docs);
-    return res.json({
-      message: 'Quarterfinals generated — 4 fixtures created',
-      stage: 'quarterfinal',
-      fixturesCreated: docs.length,
-    });
+    return res.json({ message: 'Quarterfinals generated — 4 fixtures created', fixturesCreated: docs.length });
   }
 
-  // ── SEMIFINALS ──────────────────────────────────────────────────────────────
+  // ── Semifinals ─────────────────────────────────────────────────────────────
   if (currentStage === 'quarterfinal') {
-    const getMatchWinner = async (matchNumber) => {
-      const fixture = await Fixture.findOne({ matchNumber, stage: 'quarterfinal' });
-      if (!fixture) throw new Error(`Match ${matchNumber} not found`);
-      return getWinner(fixture);
-    };
-
     const pairings = [
-      { matchNumber: 101, home: await getMatchWinner(97), away: await getMatchWinner(98),  date: '2026-07-14T21:00:00Z'   },
-      { matchNumber: 102, home: await getMatchWinner(99), away: await getMatchWinner(100), date: '2026-07-15T21:00:00Z' },
+      { matchNumber: 101, homeFrom: [97,'quarterfinal'], awayFrom: [98,'quarterfinal'], date: '2026-07-14T21:00:00Z' },
+      { matchNumber: 102, homeFrom: [99,'quarterfinal'], awayFrom: [100,'quarterfinal'], date: '2026-07-15T21:00:00Z' },
     ];
 
-    const docs = pairings.map((f) => ({
-      homeTeam:           f.home,
-      awayTeam:           f.away,
+    const docs = await Promise.all(pairings.map(async (p) => ({
+      homeTeam:           await byMatch(p.homeFrom[0], p.homeFrom[1]),
+      awayTeam:           await byMatch(p.awayFrom[0], p.awayFrom[1]),
       stage:              'semifinal',
-      matchNumber:        f.matchNumber,
-      matchDatetime:      new Date(f.date),
-      predictionDeadline: new Date(new Date(f.date).getTime() - 60 * 60 * 1000),
+      matchNumber:        p.matchNumber,
+      matchDatetime:      new Date(p.date),
+      predictionDeadline: new Date(new Date(p.date).getTime() - 60 * 60 * 1000),
       status:             'upcoming',
-    }));
+    })));
 
     await Fixture.insertMany(docs);
-    return res.json({
-      message: 'Semifinals generated — 2 fixtures created',
-      stage: 'semifinal',
-      fixturesCreated: docs.length,
-    });
+    return res.json({ message: 'Semifinals generated — 2 fixtures created', fixturesCreated: docs.length });
   }
 
-  // ── THIRD PLACE + FINAL ─────────────────────────────────────────────────────
+  // ── Third Place + Final ────────────────────────────────────────────────────
   if (currentStage === 'semifinal') {
     const sf1 = await Fixture.findOne({ matchNumber: 101, stage: 'semifinal' });
     const sf2 = await Fixture.findOne({ matchNumber: 102, stage: 'semifinal' });
 
-    if (!sf1 || !sf2) {
-      return res.status(400).json({ error: 'Semifinal fixtures not found' });
-    }
+    if (!sf1 || !sf2) return res.status(400).json({ error: 'Semifinal fixtures not found' });
 
-    const finalist1     = getWinner(sf1);
-    const finalist2     = getWinner(sf2);
-    const thirdPlace1   = getLoser(sf1);
-    const thirdPlace2   = getLoser(sf2);
+    const finalist1   = getWinner(sf1);
+    const finalist2   = getWinner(sf2);
+    const thirdPlace1 = getLoser(sf1);
+    const thirdPlace2 = getLoser(sf2);
 
     if (!finalist1 || !finalist2 || !thirdPlace1 || !thirdPlace2) {
       return res.status(400).json({ error: 'Semifinal results incomplete' });
     }
 
-    const docs = [
+    await Fixture.insertMany([
       {
-        homeTeam:           thirdPlace1,
-        awayTeam:           thirdPlace2,
-        stage:              'third_place',
-        matchNumber:        103,
-        matchDatetime:      new Date('2026-07-18T19:00:00Z'),
+        homeTeam: thirdPlace1, awayTeam: thirdPlace2,
+        stage: 'third_place', matchNumber: 103,
+        matchDatetime: new Date('2026-07-18T19:00:00Z'),
         predictionDeadline: new Date('2026-07-18T18:00:00Z'),
-        status:             'upcoming',
+        status: 'upcoming',
       },
       {
-        homeTeam:           finalist1,
-        awayTeam:           finalist2,
-        stage:              'final',
-        matchNumber:        104,
-        matchDatetime:      new Date('2026-07-19T20:00:00Z'),
+        homeTeam: finalist1, awayTeam: finalist2,
+        stage: 'final', matchNumber: 104,
+        matchDatetime: new Date('2026-07-19T20:00:00Z'),
         predictionDeadline: new Date('2026-07-19T19:00:00Z'),
-        status:             'upcoming',
-       
+        status: 'upcoming',
       },
-    ];
+    ]);
 
-    await Fixture.insertMany(docs);
-    return res.json({
-      message: 'Third Place match and Final generated — 2 fixtures created',
-      stage: 'final',
-      fixturesCreated: docs.length,
-    });
+    return res.json({ message: 'Third Place match and Final generated — 2 fixtures created', fixturesCreated: 2 });
   }
 
   return res.status(400).json({ error: 'Tournament is already complete' });
@@ -540,7 +528,9 @@ module.exports = {
   triggerTeamSync,
   triggerPointsRecalculation,
   triggerStandingsRecalculation,
-  generateKnockout,
+  saveRoundOf32,
+  resetRoundOf32,
+  generateNextKnockoutRound,
   getAdminFixtures,
   setFixtureResult,
 };
