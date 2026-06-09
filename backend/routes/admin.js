@@ -5,7 +5,7 @@ const {
   getTeams, createTeam, updateTeam,
   triggerFixtureSync, triggerTeamSync,
   triggerPointsRecalculation, triggerStandingsRecalculation,
-  generateKnockout,
+  saveRoundOf32, generateNextKnockoutRound, resetRoundOf32,
   getAdminFixtures, setFixtureResult,
 } = require('../controllers/adminController');
 const { authenticate, requireAdmin } = require('../middleware/auth');
@@ -22,7 +22,9 @@ router.post('/sync/fixtures', triggerFixtureSync);
 router.post('/sync/teams', triggerTeamSync);
 router.post('/recalculate-points', triggerPointsRecalculation);
 router.post('/recalculate-standings', triggerStandingsRecalculation);
-router.post('/generate-knockout', generateKnockout);
+router.post('/generate-knockout/round-of-32', saveRoundOf32);
+router.delete('/generate-knockout/round-of-32', resetRoundOf32);
+router.post('/generate-knockout/auto', generateNextKnockoutRound);
 router.get('/fixtures', getAdminFixtures);              
 router.put('/fixtures/:id/result', setFixtureResult); 
 
