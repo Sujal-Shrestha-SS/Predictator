@@ -61,7 +61,7 @@ export default function HomePage() {
           </p>
           <div className="flex gap-3 flex-wrap">
             <Link to="/fixtures" className="bg-white text-primary-700 font-bold px-6 py-3 rounded-xl hover:bg-white/90 transition-all active:scale-95">
-              View Fixtures ⚽
+              View Fixtures 
             </Link>
             {!user && (
               <Link to="/login" className="bg-white/20 hover:bg-white/30 text-white font-bold px-6 py-3 rounded-xl transition-all active:scale-95">
@@ -71,9 +71,9 @@ export default function HomePage() {
           </div>
         </div>
         <div className="absolute bottom-6 right-6 hidden lg:flex gap-12">
-          <HeroStat label="Teams" value="48" icon="🏳️" />
-          <HeroStat label="Matches" value="104" icon="⚽" />
-          <HeroStat label="Days" value="32" icon="📅" />
+          <HeroStat label="Teams" value="48"  />
+          <HeroStat label="Matches" value="104"  />
+          <HeroStat label="Days" value="32"  />
         </div>
       </div>
 
