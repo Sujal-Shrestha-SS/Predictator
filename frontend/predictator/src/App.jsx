@@ -20,6 +20,7 @@ import MyPredictionsPage from './pages/MyPredictionsPage';
 import ProfilePage from './pages/ProfilePage';
 import AdminPage from './pages/AdminPage';
 import NotFoundPage from './pages/NotFoundPage';
+import KnockoutSetupPage from './pages/KnockoutSetupPage';
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -53,6 +54,7 @@ const AppRoutes = () => (
       <Route path="predictions" element={<ProtectedRoute><MyPredictionsPage /></ProtectedRoute>} />
       <Route path="profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
       <Route path="admin" element={<AdminRoute><AdminPage /></AdminRoute>} />
+      <Route path="/admin/knockout-setup" element={<AdminRoute><KnockoutSetupPage /></AdminRoute>} />
       <Route path="*" element={<NotFoundPage />} />
     </Route>
   </Routes>
