@@ -4,23 +4,25 @@ import api from '../services/api';
 import toast from 'react-hot-toast';
 import { Spinner } from '../components/common/LoadingScreen';
 
+const d = (dateStr) => new Date(dateStr);
+
 const R32_SLOTS = [
-  { matchNumber: 73,  label: 'Match 73', date: 'Sun 28 Jun'  },
-  { matchNumber: 74,  label: 'Match 74', date: 'Mon 29 Jun'       },
-  { matchNumber: 75,  label: 'Match 75', date: 'Mon 29 Jun'    },
-  { matchNumber: 76,  label: 'Match 76', date: 'Mon 29 Jun'      },
-  { matchNumber: 77,  label: 'Match 77', date: 'Tue 30 Jun'   },
-  { matchNumber: 78,  label: 'Match 78', date: 'Tue 30 Jun'        },
-  { matchNumber: 79,  label: 'Match 79', date: 'Tue 30 Jun'   },
-  { matchNumber: 80,  label: 'Match 80', date: 'Wed 1 Jul'  },
-  { matchNumber: 81,  label: 'Match 81', date: 'Wed 1 Jul'  },
-  { matchNumber: 82,  label: 'Match 82', date: 'Wed 1 Jul'       },
-  { matchNumber: 83,  label: 'Match 83', date: 'Thu 2 Jul'       },
-  { matchNumber: 84,  label: 'Match 84', date: 'Thu 2 Jul'   },
-  { matchNumber: 85,  label: 'Match 85', date: 'Thu 2 Jul'     },
-  { matchNumber: 86,  label: 'Match 86', date: 'Fri 3 Jul'         },
-  { matchNumber: 87,  label: 'Match 87', date: 'Fri 3 Jul'   },
-  { matchNumber: 88,  label: 'Match 88', date: 'Fri 3 Jul'        },
+  { matchNumber: 73,  label: 'Match 73', date: d('2026-06-18T00:45'),  },
+  { matchNumber: 74,  label: 'Match 74', date: d('2026-06-18T22:45'),  },
+  { matchNumber: 75,  label: 'Match 75', date: d('2026-06-18T02:15'),  },
+  { matchNumber: 76,  label: 'Match 76', date: d('2026-06-18T06:45'),  },
+  { matchNumber: 77,  label: 'Match 77', date: d('2026-06-18T22:45'),  },
+  { matchNumber: 78,  label: 'Match 78', date: d('2026-06-18T02:45'),  },
+  { matchNumber: 79,  label: 'Match 79', date: d('2026-06-18T06:45'),  },
+  { matchNumber: 80,  label: 'Match 80', date: d('2026-06-18T21:45'),  },
+  { matchNumber: 81,  label: 'Match 81', date: d('2026-06-18T01:45'),  },
+  { matchNumber: 82,  label: 'Match 82', date: d('2026-06-18T05:45'),  },
+  { matchNumber: 83,  label: 'Match 83', date: d('2026-06-18T00:45'),  },
+  { matchNumber: 84,  label: 'Match 84', date: d('2026-06-18T04:45'),  },
+  { matchNumber: 85,  label: 'Match 85', date: d('2026-06-18T08:45'),  },
+  { matchNumber: 86,  label: 'Match 86', date: d('2026-06-18T23:45'),  },
+  { matchNumber: 87,  label: 'Match 87', date: d('2026-06-18T03:45'),  },
+  { matchNumber: 88,  label: 'Match 88', date: d('2026-06-18T07:15'),  },
 ];
 
 const FLAG_MAP = {

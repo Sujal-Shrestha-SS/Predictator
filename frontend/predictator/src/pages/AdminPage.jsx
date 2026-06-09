@@ -426,19 +426,35 @@ export default function AdminPage() {
                         {/* Score display */}
                         <div className="text-center w-16 flex-shrink-0">
                           {hasResult ? (
-                            <div>
-                              <div className="font-display text-xl text-[var(--text-primary)]">
-                                {fixture.result.homeScore} – {fixture.result.awayScore}
-                              </div>
-                              {fixture.result.penalties && (
-                                <div className="text-[10px] text-[var(--text-secondary)]">
-                                  (pens {fixture.result.penaltyHomeScore}–{fixture.result.penaltyAwayScore})
+                              <div>
+                                <div className="font-display text-xl text-[var(--text-primary)]">
+                                  {fixture.result.homeScore} – {fixture.result.awayScore}
                                 </div>
-                              )}
-                              {fixture.result.extraTime && !fixture.result.penalties && (
-                                <div className="text-[10px] text-[var(--text-secondary)]">AET</div>
-                              )}
-                            </div>
+
+                                {/* Penalty shootout */}
+                                {fixture.result.penalties === true &&
+                                fixture.result.penaltyHomeScore != null &&
+                                fixture.result.penaltyAwayScore != null && (
+                                  <div className="text-[10px] text-[var(--text-secondary)]">
+                                    pens ({fixture.result.penaltyHomeScore}–{fixture.result.penaltyAwayScore})
+                                  </div>
+                                )}
+
+                                {/* Extra time but no penalties */}
+                                {fixture.result.extraTime === true &&
+                                fixture.result.penalties !== true && (
+                                  <div className="text-[10px] text-[var(--text-secondary)]">AET</div>
+                                )}
+
+                                {/* Winner indicator for knockout matches */}
+                                {fixture.result.winner && fixture.result.winner !== 'draw' && (
+                                  <div className="text-[10px] text-primary-500 font-medium">
+                                    {fixture.result.winner === 'home'
+                                      ? `${fixture.homeTeam?.shortName} win`
+                                      : `${fixture.awayTeam?.shortName} win`}
+                                  </div>
+                                )}
+                              </div>
                           ) : (
                             <span className="text-[var(--text-secondary)] text-sm">vs</span>
                           )}
