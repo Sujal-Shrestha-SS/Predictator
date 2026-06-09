@@ -140,8 +140,23 @@ export default function FixtureCard({ fixture, prediction }) {
             ) : (
               <>
              
-              <span className="text-gray-500 font-semibold">FT</span>
+              
+                <span className="text-gray-500 font-semibold">FT</span>
+
+                {fixture.result?.extraTime && (
+                  <span className="text-xs text-amber-500 font-medium">
+                    AET
+                  </span>
+                )}
+
+                {fixture.result?.penalties && (
+                  <span className="text-xs text-purple-500 font-medium text-center">
+                    ({fixture.result.penaltyHomeScore}-
+                    {fixture.result.penaltyAwayScore} PEN)
+                  </span>
+                )}
               </>
+              
             )}
 
           </div>
