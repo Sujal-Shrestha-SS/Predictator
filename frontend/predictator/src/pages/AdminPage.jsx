@@ -25,6 +25,8 @@ function ActionButton({ label, icon, onClick, loading, color = 'btn-secondary' }
   );
 }
 
+
+
 const STAGE_LABELS = {
   group_stage: 'Group Stage',
   round_of_32: 'Round of 32',
@@ -608,6 +610,55 @@ export default function AdminPage() {
                     </button>
                   )
                 )}
+
+                {/* Round of 32 Management */}
+                  {stats?.roundOf32Exists && (
+                    <div className="mt-4 pt-4 border-t border-[var(--border)]">
+                      <h4 className="text-sm font-semibold text-[var(--text-primary)] mb-3">
+                        ROUND OF 32 MANAGEMENT
+                      </h4>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          onClick={() => navigate('/admin/knockout-setup')}
+                          className="btn-secondary"
+                        >
+                          ✏️ Edit Round of 32
+                        </button>
+
+                        <button
+                          disabled={loadingAction === 'reset-r32'}
+                          onClick={() => {
+                            if (
+                              !window.confirm(
+                                'Reset Round of 32? This will remove all Round of 32 fixtures.'
+                              )
+                            ) {
+                              return;
+                            }
+
+                            doAction(
+                              'reset-r32',
+                              () =>
+                                api.delete(
+                                  '/admin/generate-knockout/round-of-32'
+                                ),
+                              'Round of 32 reset!'
+                            ).then(() => {
+                              api.get('/admin/stats').then((res) => {
+                                setStats(res.data.stats);
+                              });
+                            });
+                          }}
+                          className="btn-secondary"
+                        >
+                          {loadingAction === 'reset-r32'
+                            ? 'Resetting...'
+                            : '🗑️ Reset Round of 32'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
               </div>
         </div>
       )}
