@@ -475,7 +475,7 @@ const getAdminFixtures = asyncHandler(async (req, res) => {
 // PUT /api/admin/fixtures/:id/result
 
 const setFixtureResult = asyncHandler(async (req, res) => {
-  const { homeScore, awayScore } = req.body;
+  const { homeScore, awayScore, extraTime, penalties, penaltyHomeScore, penaltyAwayScore } = req.body;
 
   if (homeScore == null || awayScore == null) {
     return res.status(400).json({ error: 'homeScore and awayScore are required' });
@@ -492,11 +492,33 @@ const setFixtureResult = asyncHandler(async (req, res) => {
   const home = parseInt(homeScore);
   const away = parseInt(awayScore);
 
-  fixture.result = {
-    homeScore: home,
-    awayScore: away,
-    winner: home > away ? 'home' : away > home ? 'away' : 'draw',
-  };
+  let winner = null;
+
+  if (home > away) {
+    winner = 'home';
+  } else if (away > home) {
+    winner = 'away';
+  } else if (penalties) {
+    winner =
+      Number(penaltyHomeScore) > Number(penaltyAwayScore)
+        ? 'home'
+        : 'away';
+  } else {
+    winner = 'draw';
+  }
+
+fixture.result = {
+  homeScore: home,
+  awayScore: away,
+  winner,
+  extraTime: extraTime || false,
+  penalties: penalties || false,
+  penaltyHomeScore:
+    penaltyHomeScore !== undefined ? penaltyHomeScore : null,
+  penaltyAwayScore:
+    penaltyAwayScore !== undefined ? penaltyAwayScore : null,
+};
+
   fixture.status = 'completed';
   await fixture.save();
 
