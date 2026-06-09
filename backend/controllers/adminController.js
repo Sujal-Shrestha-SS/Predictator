@@ -101,15 +101,18 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     }
   }
 
-  res.json({
-    stats: {
-      users,
-      fixtures,
-      predictions,
-      completedMatches,
-      knockoutButton,
-    },
-  });
+ const roundOf32Exists = stageStats.round_of_32?.total > 0;
+
+res.json({
+  stats: {
+    users,
+    fixtures,
+    predictions,
+    completedMatches,
+    knockoutButton,
+    roundOf32Exists,
+  },
+});
 });
 
 // GET /api/admin/users
@@ -211,24 +214,26 @@ const saveRoundOf32 = asyncHandler(async (req, res) => {
     return res.status(400).json({ error: 'Round of 32 fixtures already exist' });
   }
 
+  const d = (dateStr) => new Date(dateStr); 
+
   // Official R32 dates and venues (no stadium names per requirement)
   const FIXTURE_META = {
-    73:  { date: '2026-06-28T17:00:00Z'   },
-    74:  { date: '2026-06-29T17:00:00Z'   },
-    75:  { date: '2026-06-29T20:00:00Z' },
-    76:  { date: '2026-06-29T23:00:00Z' },
-    77:  { date: '2026-06-30T17:00:00Z' },
-    78:  { date: '2026-06-30T20:00:00Z' },
-    79:  { date: '2026-06-30T23:00:00Z' },
-    80:  { date: '2026-07-01T17:00:00Z' },
-    81:  { date: '2026-07-01T20:00:00Z' },
-    82:  { date: '2026-07-01T23:00:00Z' },
-    83:  { date: '2026-07-02T17:00:00Z' },
-    84:  { date: '2026-07-02T20:00:00Z' },
-    85:  { date: '2026-07-02T23:00:00Z' },
-    86:  { date: '2026-07-03T17:00:00Z' },
-    87:  { date: '2026-07-03T20:00:00Z' },
-    88:  { date: '2026-07-03T23:00:00Z' },
+    73:  { date: d('2026-06-29T00:45')   },
+    74:  { date: d('2026-06-29T22:45')   },
+    75:  { date: d('2026-06-30T02:15') },
+    76:  { date: d('2026-06-30T06:45') },
+    77:  { date: d('2026-06-30T22:45') },
+    78:  { date: d('2026-07-01T02:45') },
+    79:  { date: d('2026-07-01T06:45') },
+    80:  { date: d('2026-07-01T09:45') },
+    81:  { date: d('2026-07-02T01:45') },
+    82:  { date: d('2026-07-02T05:45') },
+    83:  { date: d('2026-07-03T00:45') },
+    84:  { date: d('2026-07-03T04:45') },
+    85:  { date: d('2026-07-03T08:45') },
+    86:  { date: d('2026-07-03T23:45') },
+    87:  { date: d('2026-07-04T03:45') },
+    88:  { date: d('2026-07-04T07:45') },
   };
 
   const docs = fixtures.map((f) => {
@@ -347,17 +352,23 @@ const generateNextKnockoutRound = asyncHandler(async (req, res) => {
     });
   }
 
+
+
+
+
   // ── Round of 16 ────────────────────────────────────────────────────────────
   if (currentStage === 'round_of_32') {
+      const d = (dateStr) => new Date(dateStr); 
+
     const pairings = [
-      { matchNumber: 89,  homeFrom: [74,'round_of_32'], awayFrom: [77,'round_of_32'], date: '2026-07-04T17:00:00Z' },
-      { matchNumber: 90,  homeFrom: [73,'round_of_32'], awayFrom: [75,'round_of_32'], date: '2026-07-04T21:00:00Z' },
-      { matchNumber: 91,  homeFrom: [76,'round_of_32'], awayFrom: [78,'round_of_32'], date: '2026-07-05T17:00:00Z' },
-      { matchNumber: 92,  homeFrom: [79,'round_of_32'], awayFrom: [80,'round_of_32'], date: '2026-07-05T21:00:00Z' },
-      { matchNumber: 93,  homeFrom: [83,'round_of_32'], awayFrom: [84,'round_of_32'], date: '2026-07-06T17:00:00Z' },
-      { matchNumber: 94,  homeFrom: [81,'round_of_32'], awayFrom: [82,'round_of_32'], date: '2026-07-06T21:00:00Z' },
-      { matchNumber: 95,  homeFrom: [86,'round_of_32'], awayFrom: [88,'round_of_32'], date: '2026-07-07T17:00:00Z' },
-      { matchNumber: 96,  homeFrom: [85,'round_of_32'], awayFrom: [87,'round_of_32'], date: '2026-07-07T17:00:00Z' },
+      { matchNumber: 89,  homeFrom: [74,'round_of_32'], awayFrom: [77,'round_of_32'], date: d('2026-07-04T22:45') },
+      { matchNumber: 90,  homeFrom: [73,'round_of_32'], awayFrom: [75,'round_of_32'], date: d('2026-07-05T02:45') },
+      { matchNumber: 91,  homeFrom: [76,'round_of_32'], awayFrom: [78,'round_of_32'], date: d('2026-07-06T01:45') },
+      { matchNumber: 92,  homeFrom: [79,'round_of_32'], awayFrom: [80,'round_of_32'], date: d('2026-07-06T05:45') },
+      { matchNumber: 93,  homeFrom: [83,'round_of_32'], awayFrom: [84,'round_of_32'], date: d('2026-07-07T00:45') },
+      { matchNumber: 94,  homeFrom: [81,'round_of_32'], awayFrom: [82,'round_of_32'], date: d('2026-07-07T05:45') },
+      { matchNumber: 95,  homeFrom: [86,'round_of_32'], awayFrom: [88,'round_of_32'], date: d('2026-07-07T21:45') },
+      { matchNumber: 96,  homeFrom: [85,'round_of_32'], awayFrom: [87,'round_of_32'], date: d('2026-07-08T01:45') },
     ];
 
     const docs = await Promise.all(pairings.map(async (p) => ({
@@ -376,11 +387,13 @@ const generateNextKnockoutRound = asyncHandler(async (req, res) => {
 
   // ── Quarterfinals ──────────────────────────────────────────────────────────
   if (currentStage === 'round_of_16') {
+      const d = (dateStr) => new Date(dateStr); 
+
     const pairings = [
-      { matchNumber: 97,  homeFrom: [89,'round_of_16'], awayFrom: [90,'round_of_16'], date: '2026-07-09T21:00:00Z' },
-      { matchNumber: 98,  homeFrom: [93,'round_of_16'], awayFrom: [94,'round_of_16'], date: '2026-07-10T21:00:00Z' },
-      { matchNumber: 99,  homeFrom: [91,'round_of_16'], awayFrom: [92,'round_of_16'], date: '2026-07-11T17:00:00Z' },
-      { matchNumber: 100, homeFrom: [95,'round_of_16'], awayFrom: [96,'round_of_16'], date: '2026-07-11T21:00:00Z' },
+      { matchNumber: 97,  homeFrom: [89,'round_of_16'], awayFrom: [90,'round_of_16'], date: d('2026-07-10T01:45') },
+      { matchNumber: 98,  homeFrom: [93,'round_of_16'], awayFrom: [94,'round_of_16'], date: d('2026-07-11T00:45') },
+      { matchNumber: 99,  homeFrom: [91,'round_of_16'], awayFrom: [92,'round_of_16'], date: d('2026-07-12T02:45') },
+      { matchNumber: 100, homeFrom: [95,'round_of_16'], awayFrom: [96,'round_of_16'], date: d('2026-07-12T06:45') },
     ];
 
     const docs = await Promise.all(pairings.map(async (p) => ({
@@ -399,9 +412,11 @@ const generateNextKnockoutRound = asyncHandler(async (req, res) => {
 
   // ── Semifinals ─────────────────────────────────────────────────────────────
   if (currentStage === 'quarterfinal') {
+      const d = (dateStr) => new Date(dateStr); 
+
     const pairings = [
-      { matchNumber: 101, homeFrom: [97,'quarterfinal'], awayFrom: [98,'quarterfinal'], date: '2026-07-14T21:00:00Z' },
-      { matchNumber: 102, homeFrom: [99,'quarterfinal'], awayFrom: [100,'quarterfinal'], date: '2026-07-15T21:00:00Z' },
+      { matchNumber: 101, homeFrom: [97,'quarterfinal'], awayFrom: [98,'quarterfinal'], date: d('2026-07-15T00:45') },
+      { matchNumber: 102, homeFrom: [99,'quarterfinal'], awayFrom: [100,'quarterfinal'], date: d('2026-07-16T00:45') },
     ];
 
     const docs = await Promise.all(pairings.map(async (p) => ({
@@ -420,6 +435,8 @@ const generateNextKnockoutRound = asyncHandler(async (req, res) => {
 
   // ── Third Place + Final ────────────────────────────────────────────────────
   if (currentStage === 'semifinal') {
+      const d = (dateStr) => new Date(dateStr); 
+
     const sf1 = await Fixture.findOne({ matchNumber: 101, stage: 'semifinal' });
     const sf2 = await Fixture.findOne({ matchNumber: 102, stage: 'semifinal' });
 
@@ -438,15 +455,15 @@ const generateNextKnockoutRound = asyncHandler(async (req, res) => {
       {
         homeTeam: thirdPlace1, awayTeam: thirdPlace2,
         stage: 'third_place', matchNumber: 103,
-        matchDatetime: new Date('2026-07-18T19:00:00Z'),
-        predictionDeadline: new Date('2026-07-18T18:00:00Z'),
+        matchDatetime: new Date(d('2026-07-19T02:45')),
+        predictionDeadline: new Date(d('2026-07-19T01:45')),
         status: 'upcoming',
       },
       {
         homeTeam: finalist1, awayTeam: finalist2,
         stage: 'final', matchNumber: 104,
-        matchDatetime: new Date('2026-07-19T20:00:00Z'),
-        predictionDeadline: new Date('2026-07-19T19:00:00Z'),
+        matchDatetime: new Date(d('2026-07-20T00:45')),
+        predictionDeadline: new Date(d('2026-07-19T23:45')),
         status: 'upcoming',
       },
     ]);
