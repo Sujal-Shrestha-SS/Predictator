@@ -109,7 +109,7 @@ const getByStage = asyncHandler(async (req, res) => {
 // ADMIN: POST /api/fixtures
 const createFixture = asyncHandler(async (req, res) => {
   const {
-    homeTeamId, awayTeamId, stadium, city, country,
+    homeTeamId, awayTeamId,
     matchDatetime, stage, group, matchNumber,
   } = req.body;
 
@@ -128,9 +128,6 @@ const createFixture = asyncHandler(async (req, res) => {
   const fixture = await Fixture.create({
     homeTeam: homeTeamId,
     awayTeam: awayTeamId,
-    stadium,
-    city,
-    country,
     matchDatetime: kickoff,
     predictionDeadline,
     stage,
@@ -166,29 +163,60 @@ const updateFixture = asyncHandler(async (req, res) => {
 const updateResult = asyncHandler(async (req, res) => {
   const { homeScore, awayScore, extraTime, penalties, penaltyHomeScore, penaltyAwayScore } = req.body;
 
+  if (homeScore === undefined || homeScore === null || awayScore === undefined || awayScore === null) {
+    return res.status(400).json({ error: 'homeScore and awayScore are required' });
+  }
+
   const fixture = await Fixture.findById(req.params.id);
   if (!fixture) {
     return res.status(404).json({ error: 'Fixture not found' });
   }
 
-  let winner = null;
-  if (homeScore > awayScore) winner = 'home';
-  else if (awayScore > homeScore) winner = 'away';
-  else winner = 'draw';
+  // Determine winner
+  let winner;
+  if (parseInt(homeScore) > parseInt(awayScore)) {
+    winner = 'home';
+  } else if (parseInt(awayScore) > parseInt(homeScore)) {
+    winner = 'away';
+  } else if (penalties === true) {
+    // Draw after 90 mins — winner decided by penalties
+    winner = parseInt(penaltyHomeScore) > parseInt(penaltyAwayScore) ? 'home' : 'away';
+  } else {
+    winner = 'draw';
+  }
 
-  fixture.result = {
-    homeScore,
-    awayScore,
-    winner,
-  };
-  fixture.status = 'completed';
-  await fixture.save();
+  // Use $set with dot notation to force Mongoose to detect the change
+  await Fixture.findByIdAndUpdate(
+    fixture._id,
+    {
+      $set: {
+        'result.homeScore':        parseInt(homeScore),
+        'result.awayScore':        parseInt(awayScore),
+        'result.winner':           winner,
+        'result.extraTime':        extraTime === true,
+        'result.penalties':        penalties === true,
+        'result.penaltyHomeScore': penalties === true && penaltyHomeScore !== '' && penaltyHomeScore != null
+                                     ? parseInt(penaltyHomeScore)
+                                     : null,
+        'result.penaltyAwayScore': penalties === true && penaltyAwayScore !== '' && penaltyAwayScore != null
+                                     ? parseInt(penaltyAwayScore)
+                                     : null,
+        status: 'completed',
+      },
+    },
+    { new: true }
+  );
+
+  // Fetch updated fixture with populated teams
+  const updated = await Fixture.findById(fixture._id)
+    .populate('homeTeam', 'name shortName flagUrl code')
+    .populate('awayTeam', 'name shortName flagUrl code');
 
   // Trigger score calculation
   const { calculatePredictionScores } = require('../services/scoringService');
   await calculatePredictionScores(fixture._id);
 
-  res.json({ fixture, message: 'Result updated and scores calculated' });
+  res.json({ fixture: updated, message: 'Result updated and scores calculated' });
 });
 
 // ADMIN: DELETE /api/fixtures/:id
