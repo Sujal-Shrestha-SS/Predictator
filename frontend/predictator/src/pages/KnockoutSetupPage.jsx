@@ -7,22 +7,22 @@ import { Spinner } from '../components/common/LoadingScreen';
 const d = (dateStr) => new Date(dateStr);
 
 const R32_SLOTS = [
-  { matchNumber: 73,  label: 'Match 73', date: d('2026-06-18T00:45'),  },
-  { matchNumber: 74,  label: 'Match 74', date: d('2026-06-18T22:45'),  },
-  { matchNumber: 75,  label: 'Match 75', date: d('2026-06-18T02:15'),  },
-  { matchNumber: 76,  label: 'Match 76', date: d('2026-06-18T06:45'),  },
-  { matchNumber: 77,  label: 'Match 77', date: d('2026-06-18T22:45'),  },
-  { matchNumber: 78,  label: 'Match 78', date: d('2026-06-18T02:45'),  },
-  { matchNumber: 79,  label: 'Match 79', date: d('2026-06-18T06:45'),  },
-  { matchNumber: 80,  label: 'Match 80', date: d('2026-06-18T21:45'),  },
-  { matchNumber: 81,  label: 'Match 81', date: d('2026-06-18T01:45'),  },
-  { matchNumber: 82,  label: 'Match 82', date: d('2026-06-18T05:45'),  },
-  { matchNumber: 83,  label: 'Match 83', date: d('2026-06-18T00:45'),  },
-  { matchNumber: 84,  label: 'Match 84', date: d('2026-06-18T04:45'),  },
-  { matchNumber: 85,  label: 'Match 85', date: d('2026-06-18T08:45'),  },
-  { matchNumber: 86,  label: 'Match 86', date: d('2026-06-18T23:45'),  },
-  { matchNumber: 87,  label: 'Match 87', date: d('2026-06-18T03:45'),  },
-  { matchNumber: 88,  label: 'Match 88', date: d('2026-06-18T07:15'),  },
+  { matchNumber: 73,  label: 'Match 73', date: d('2026-06-29T00:45'),  },
+  { matchNumber: 74,  label: 'Match 74', date: d('2026-06-29T22:45'),  },
+  { matchNumber: 75,  label: 'Match 75', date: d('2026-06-30T02:15'),  },
+  { matchNumber: 76,  label: 'Match 76', date: d('2026-06-30T06:45'),  },
+  { matchNumber: 77,  label: 'Match 77', date: d('2026-06-30T22:45'),  },
+  { matchNumber: 78,  label: 'Match 78', date: d('2026-07-01T02:45'),  },
+  { matchNumber: 79,  label: 'Match 79', date: d('2026-07-01T06:45'),  },
+  { matchNumber: 80,  label: 'Match 80', date: d('2026-07-01T21:45'),  },
+  { matchNumber: 81,  label: 'Match 81', date: d('2026-07-02T01:45'),  },
+  { matchNumber: 82,  label: 'Match 82', date: d('2026-07-02T05:45'),  },
+  { matchNumber: 83,  label: 'Match 83', date: d('2026-07-03T00:45'),  },
+  { matchNumber: 84,  label: 'Match 84', date: d('2026-07-03T04:45'),  },
+  { matchNumber: 85,  label: 'Match 85', date: d('2026-07-03T08:45'),  },
+  { matchNumber: 86,  label: 'Match 86', date: d('2026-07-03T23:45'),  },
+  { matchNumber: 87,  label: 'Match 87', date: d('2026-07-04T03:45'),  },
+  { matchNumber: 88,  label: 'Match 88', date: d('2026-07-04T07:15'),  },
 ];
 
 const FLAG_MAP = {
@@ -336,8 +336,7 @@ export default function KnockoutSetupPage() {
                 {/* Match info */}
                 <div className="w-28 flex-shrink-0">
                   <div className="font-display text-base text-[var(--text-primary)]">{slot.label}</div>
-                  <div className="text-xs text-[var(--text-secondary)]">{slot.date}</div>
-                  <div className="text-xs text-[var(--text-secondary)]">{slot.city}</div>
+                  <div className="text-xs text-[var(--text-secondary)]">{slot.date.toLocaleDateString()}</div>
                 </div>
 
                 {/* View mode */}
