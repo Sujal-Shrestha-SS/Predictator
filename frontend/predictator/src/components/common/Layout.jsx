@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -177,7 +177,7 @@ export default function Layout() {
       <footer className="border-t border-[var(--border)] mt-20 py-8">
         <div className="max-w-7xl mx-auto px-4 text-center text-[var(--text-secondary)] text-sm">
           <p className="font-display text-lg text-[var(--text-primary)] mb-2">PREDICTATOR</p>
-          <p>FIFA World Cup 2026 Prediction Platform · Built with ⚽ and ❤️</p>
+          <p>FIFA World Cup 2026 Prediction Platform </p>
         </div>
       </footer>
     </div>
