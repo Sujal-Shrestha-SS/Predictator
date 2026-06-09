@@ -1,7 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import toast from 'react-hot-toast';
 import { Spinner } from '../components/common/LoadingScreen';
+
+
 
 function StatCard({ icon, label, value, color = 'text-primary-500' }) {
   return (
@@ -38,6 +41,7 @@ const STATUS_BADGE = {
 };
 
 function ResultModal({ fixture, onClose, onSaved }) {
+  
   const [homeScore, setHomeScore] = useState(fixture.result?.homeScore ?? '');
   const [awayScore, setAwayScore] = useState(fixture.result?.awayScore ?? '');
   const [extraTime, setExtraTime] = useState(fixture.result?.extraTime || false);
@@ -199,6 +203,7 @@ function ResultModal({ fixture, onClose, onSaved }) {
 }
 
 export default function AdminPage() {
+  const navigate = useNavigate();
   const [stats, setStats]             = useState(null);
   const [users, setUsers]             = useState([]);
   const [teams, setTeams]             = useState([]);
@@ -491,35 +496,103 @@ export default function AdminPage() {
 
           {/* Tools tab — replace the existing knockout card with this */}
             <div className="card p-6">
-              <h3 className="font-display text-xl text-[var(--text-primary)] mb-2">
-                KNOCKOUT STAGE
-              </h3>
-              <p className="text-sm text-[var(--text-secondary)] mb-4">
-                Generates the next round automatically based on current results.
-                All fixtures in the current stage must be completed first.
-              </p>
+                <h3 className="font-display text-xl text-[var(--text-primary)] mb-3">
+                  KNOCKOUT STAGE
+                </h3>
 
-              {/* Show what round will be generated */}
-              {stats && (
-                <p className="text-xs text-primary-500 mb-4 font-medium">
-                  Next round to generate: {stats.nextKnockoutStage || 'Round of 32'}
-                </p>
-              )}
+                {/* Progress indicator */}
+                {stats?.knockoutButton && (
+                  <div className="mb-4">
+                    {['Group Stage', 'Round of 32', 'Round of 16', 'Quarterfinal', 'Semifinal', 'Final'].map((stage, i) => {
+                      const stageKeys = ['group_stage', 'round_of_32', 'round_of_16', 'quarterfinal', 'semifinal', 'final'];
+                      // Determine status from knockoutButton label
+                      const labelStages = {
+                        'Set Up Round of 32':        0,
+                        'Generate Round of 16':      1,
+                        'Generate Quarterfinal':     2,
+                        'Generate Semifinal':        3,
+                        'Generate Final + Third Place': 4,
+                        'Tournament Complete 🏆':    5,
+                      };
+                      const currentIdx = labelStages[stats.knockoutButton.label] ?? 0;
+                      const isDone     = i < currentIdx;
+                      const isCurrent  = i === currentIdx;
 
-              <ActionButton
-                label={`Generate ${stats?.nextKnockoutStage || 'Round of 32'}`}
-                icon="⚡"
-                color="btn-primary"
-                loading={loadingAction === 'gen-knockout'}
-                onClick={() =>
-                  doAction(
-                    'gen-knockout',
-                    () => api.post('/admin/generate-knockout'),
-                    'Knockout round generated!'
+                      return (
+                        <div key={stage} className="flex items-center gap-2 mb-1">
+                          <div className={`w-4 h-4 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] ${
+                            isDone    ? 'bg-green-500 text-white' :
+                            isCurrent ? 'bg-primary-500 text-white' :
+                            'bg-[var(--border)] text-[var(--text-secondary)]'
+                          }`}>
+                            {isDone ? '✓' : i + 1}
+                          </div>
+                          <span className={`text-xs ${
+                            isDone    ? 'text-green-500 line-through' :
+                            isCurrent ? 'text-[var(--text-primary)] font-medium' :
+                            'text-[var(--text-secondary)]'
+                          }`}>
+                            {stage}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Disabled reason */}
+                {stats?.knockoutButton?.disabled && stats.knockoutButton.reason && (
+                  <p className="text-xs text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-900/20 px-3 py-2 rounded-lg mb-4">
+                    ⏳ {stats.knockoutButton.reason}
+                  </p>
+                )}
+
+                {/* Tournament complete */}
+                {stats?.knockoutButton?.action === 'complete' && (
+                  <p className="text-sm text-green-500 font-medium mb-4">
+                    🏆 The tournament is complete!
+                  </p>
+                )}
+
+                {/* The button — always rendered, disabled when needed */}
+                {stats?.knockoutButton && stats.knockoutButton.action !== 'complete' && (
+                  stats.knockoutButton.action === 'setup' ? (
+                    <button
+                      onClick={() => !stats.knockoutButton.disabled && navigate('/admin/knockout-setup')}
+                      disabled={stats.knockoutButton.disabled}
+                      className={`flex items-center gap-2 w-full justify-center px-4 py-2 rounded-xl font-medium text-sm transition-all ${
+                        stats.knockoutButton.disabled
+                          ? 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] cursor-not-allowed opacity-60'
+                          : 'btn-primary'
+                      }`}
+                    >
+                      ⚽ {stats.knockoutButton.label}
+                    </button>
+                  ) : (
+                    <button
+                      disabled={stats.knockoutButton.disabled || loadingAction === 'gen-knockout'}
+                      onClick={() => {
+                        if (stats.knockoutButton.disabled) return;
+                        doAction(
+                          'gen-knockout',
+                          () => api.post('/admin/generate-knockout/auto'),
+                          `${stats.knockoutButton.label} generated!`,
+                        ).then(() => {
+                          api.get('/admin/stats').then((res) => setStats(res.data.stats));
+                        });
+                      }}
+                      className={`flex items-center gap-2 w-full justify-center px-4 py-2 rounded-xl font-medium text-sm transition-all ${
+                        stats.knockoutButton.disabled
+                          ? 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] cursor-not-allowed opacity-60'
+                          : 'btn-primary'
+                      }`}
+                    >
+                      {loadingAction === 'gen-knockout' ? <Spinner size="sm" /> : '⚡'}
+                      {stats.knockoutButton.label}
+                    </button>
                   )
-                }
-              />
-            </div>
+                )}
+              </div>
         </div>
       )}
 
