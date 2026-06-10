@@ -174,16 +174,29 @@ const updateResult = asyncHandler(async (req, res) => {
 
   // Determine winner
   let winner;
-  if (parseInt(homeScore) > parseInt(awayScore)) {
-    winner = 'home';
-  } else if (parseInt(awayScore) > parseInt(homeScore)) {
-    winner = 'away';
-  } else if (penalties === true) {
-    // Draw after 90 mins — winner decided by penalties
-    winner = parseInt(penaltyHomeScore) > parseInt(penaltyAwayScore) ? 'home' : 'away';
-  } else {
-    winner = 'draw';
-  }
+
+// Normal time result
+    if (parseInt(homeScore) > parseInt(awayScore)) {
+      winner = 'home';
+    } else if (parseInt(awayScore) > parseInt(homeScore)) {
+      winner = 'away';
+    } else {
+      // Draw after 90 mins → check penalties
+      if (penalties === true) {
+        if (penaltyHomeScore == null || penaltyAwayScore == null) {
+          return res.status(400).json({
+            error: 'Penalty scores required when penalties is true',
+          });
+        }
+
+        winner =
+          parseInt(penaltyHomeScore) > parseInt(penaltyAwayScore)
+            ? 'home'
+            : 'away';
+      } else {
+        winner = 'draw';
+      }
+    }
 
   // Use $set with dot notation to force Mongoose to detect the change
   await Fixture.findByIdAndUpdate(
