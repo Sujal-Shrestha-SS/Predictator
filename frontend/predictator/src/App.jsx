@@ -21,6 +21,8 @@ import ProfilePage from './pages/ProfilePage';
 import AdminPage from './pages/AdminPage';
 import NotFoundPage from './pages/NotFoundPage';
 import KnockoutSetupPage from './pages/KnockoutSetupPage';
+import LeaguesPage from './pages/LeaguesPage';
+import LeagueDetailPage from './pages/LeagueDetailPage';
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -56,6 +58,8 @@ const AppRoutes = () => (
       <Route path="admin" element={<AdminRoute><AdminPage /></AdminRoute>} />
       <Route path="/admin/knockout-setup" element={<AdminRoute><KnockoutSetupPage /></AdminRoute>} />
       <Route path="*" element={<NotFoundPage />} />
+      <Route path="leagues" element={<ProtectedRoute><LeaguesPage /></ProtectedRoute>} />
+      <Route path="leagues/:id" element={<ProtectedRoute><LeagueDetailPage /></ProtectedRoute>} />
     </Route>
   </Routes>
 );
