@@ -4,30 +4,43 @@ const User = require('../models/User');
 
 /**
  * Point system:
- * - Exact scoreline: 30 points
- * - Correct winner: 20 points
- * - Correct draw: 15 points
+ * - Exact scoreline: 50 points  (90-min score)
+ * - Correct winner: 20 points   (includes predicting the penalty winner correctly)
+ * - Correct draw: 15 points     (group stage draws only — no draws in knockout)
  * - Otherwise: 0 points
+ *
+ * For penalty shootouts:
+ * - The "actual result" for scoring purposes is the WINNER (home/away),
+ *   not the 90-min scoreline which is always level.
+ * - Exact score still only matches the 90-min score (e.g. 1–1 AET).
  */
 const calculatePoints = (prediction, actual) => {
   const { homeScore: predHome, awayScore: predAway } = prediction;
-  const { homeScore: actHome, awayScore: actAway } = actual;
+  const { homeScore: actHome, awayScore: actAway, penalties, winner } = actual;
 
-  // Exact score match
+  // Exact score match (always based on 90-min / AET score)
   if (predHome === actHome && predAway === actAway) {
-    return { points: 30, type: 'exact' };
+    return { points: 50, type: 'exact' };
   }
 
-  // Determine actual result
-  const actualResult = actHome > actAway ? 'home' : actAway > actHome ? 'away' : 'draw';
+  // Determine the actual outcome
+  // If match went to penalties, the winner field is the true outcome (home or away)
+  // The 90-min score is always level in this case so we must NOT use it
+  let actualResult;
+  if (penalties && winner && winner !== 'draw') {
+    actualResult = winner; // 'home' or 'away'
+  } else {
+    actualResult = actHome > actAway ? 'home' : actAway > actHome ? 'away' : 'draw';
+  }
+
   const predResult = predHome > predAway ? 'home' : predAway > predHome ? 'away' : 'draw';
 
-  // Correct draw (but wrong score)
+  // Correct draw (group stage — no draws possible in knockout)
   if (actualResult === 'draw' && predResult === 'draw') {
     return { points: 15, type: 'correct_draw' };
   }
 
-  // Correct winner (not a draw, not exact score)
+  // Correct winner
   if (actualResult !== 'draw' && actualResult === predResult) {
     return { points: 20, type: 'correct_result' };
   }
@@ -50,13 +63,12 @@ const calculatePredictionScores = async (fixtureId) => {
     return;
   }
 
-  const { homeScore, awayScore } = fixture.result;
+  const { homeScore, awayScore, penalties, winner } = fixture.result;
   if (homeScore === null || awayScore === null) {
     console.log(`Fixture ${fixtureId} has no result yet`);
     return;
   }
 
-  // Get all uncalculated predictions for this fixture
   const predictions = await Prediction.find({
     fixture: fixtureId,
     isCalculated: false,
@@ -69,42 +81,32 @@ const calculatePredictionScores = async (fixtureId) => {
   for (const prediction of predictions) {
     const { points, type } = calculatePoints(
       { homeScore: prediction.homeScore, awayScore: prediction.awayScore },
-      { homeScore, awayScore }
+      { homeScore, awayScore, penalties, winner }
     );
 
-    // Update prediction
     prediction.points = points;
     prediction.pointType = type;
     prediction.isCalculated = true;
     await prediction.save();
 
-    // Track user updates
     const statField = {
       exact: 'stats.exactScores',
       correct_result: 'stats.correctResults',
       correct_draw: 'stats.correctDraws',
     }[type];
 
-    const userUpdate = {
-      userId: prediction.user,
-      points,
-      statField,
-    };
-    bulkUserUpdates.push(userUpdate);
+    bulkUserUpdates.push({ userId: prediction.user, points, statField });
   }
 
-  // Bulk update users
   for (const update of bulkUserUpdates) {
     const inc = {
       totalPoints: update.points,
       'stats.totalPredictions': 1,
     };
-    if (update.statField) inc[update.statField] = 1; //dynamically adding statField
-
+    if (update.statField) inc[update.statField] = 1;
     await User.findByIdAndUpdate(update.userId, { $inc: inc });
   }
 
-  // Mark fixture as scored
   fixture.scoresCalculated = true;
   await fixture.save();
 
@@ -117,7 +119,7 @@ const calculatePredictionScores = async (fixtureId) => {
  */
 const recalculateAllPoints = async () => {
   const users = await User.find({ isActive: true });
-  
+
   for (const user of users) {
     const predictions = await Prediction.find({
       user: user._id,
