@@ -36,7 +36,7 @@ export default function LoginPage() {
           {/* Points preview */}
           <div className="grid grid-cols-3 gap-3 mb-8">
             {[
-              { pts: 30, label: 'Exact score', color: 'text-green-500' },
+              { pts: 50, label: 'Exact score', color: 'text-green-500' },
               { pts: 20, label: 'Right winner', color: 'text-blue-500' },
               { pts: 15, label: 'Correct draw', color: 'text-yellow-500' },
             ].map((item) => (

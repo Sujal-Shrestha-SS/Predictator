@@ -81,7 +81,7 @@ export default function ProfilePage() {
 
           <div className="space-y-4">
             {[
-              { label: 'Exact Scores', value: stats.exact, pts: stats.exact * 30, color: 'bg-green-500', textColor: 'text-green-500' },
+              { label: 'Exact Scores', value: stats.exact, pts: stats.exact * 50, color: 'bg-green-500', textColor: 'text-green-500' },
               { label: 'Correct Results', value: stats.correctResult, pts: stats.correctResult * 20, color: 'bg-blue-500', textColor: 'text-blue-500' },
               { label: 'Correct Draws', value: stats.correctDraw, pts: stats.correctDraw * 15, color: 'bg-yellow-500', textColor: 'text-yellow-500' },
               { label: 'Incorrect', value: stats.incorrect, pts: 0, color: 'bg-red-400', textColor: 'text-red-400' },
@@ -115,7 +115,7 @@ export default function ProfilePage() {
         <h3 className="font-display text-xl text-[var(--text-primary)] mb-4">POINT SYSTEM</h3>
         <div className="grid grid-cols-3 gap-4 text-center">
           {[
-            { pts: 30, label: 'Exact Score', desc: 'Correct scoreline', icon: '⭐', color: 'text-green-500' },
+            { pts: 50, label: 'Exact Score', desc: 'Correct scoreline', icon: '⭐', color: 'text-green-500' },
             { pts: 20, label: 'Correct Winner', desc: 'Right team wins', icon: '✓', color: 'text-blue-500' },
             { pts: 15, label: 'Correct Draw', desc: 'Both predict draw', icon: '≈', color: 'text-yellow-500' },
           ].map((p) => (
