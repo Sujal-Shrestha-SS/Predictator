@@ -27,7 +27,7 @@ const WC_2026_TEAMS = [
   { name: 'Brazil',        shortName: 'BRA', code: 'BRA', group: 'C', confederation: 'CONMEBOL', flagUrl: 'https://flagcdn.com/br.svg' },
   { name: 'Morocco',       shortName: 'MAR', code: 'MAR', group: 'C', confederation: 'CAF',      flagUrl: 'https://flagcdn.com/ma.svg' },
   { name: 'Haiti',         shortName: 'HTI', code: 'HTI', group: 'C', confederation: 'CONCACAF', flagUrl: 'https://flagcdn.com/ht.svg' },
-  { name: 'Scotland',      shortName: 'SCT', code: 'SCT', group: 'C', confederation: 'UEFA',     flagUrl: 'https://flagcdn.com/sx.svg' },
+  { name: 'Scotland',      shortName: 'SCT', code: 'SCT', group: 'C', confederation: 'UEFA',     flagUrl: 'https://flagcdn.com/gb-sct.svg' },
 
   // Group D
   { name: 'USA',        shortName: 'USA', code: 'USA', group: 'D', confederation: 'CONCACAF', flagUrl: 'https://flagcdn.com/us.svg' },
@@ -61,7 +61,7 @@ const WC_2026_TEAMS = [
 
   // Group I
   { name: 'France',        shortName: 'FRA', code: 'FRA', group: 'I', confederation: 'UEFA',     flagUrl: 'https://flagcdn.com/fr.svg' },
-  { name: 'Senegal',       shortName: 'SEN', code: 'SEN', group: 'I', confederation: 'CAF',      flagUrl: 'https://flagcdn.com/ma.svg' },
+  { name: 'Senegal',       shortName: 'SEN', code: 'SEN', group: 'I', confederation: 'CAF',      flagUrl: 'https://flagcdn.com/sn.svg' },
   { name: 'Iraq',          shortName: 'IRQ', code: 'IRQ', group: 'I', confederation: 'AFC',      flagUrl: 'https://flagcdn.com/iq.svg' },
   { name: 'Norway',        shortName: 'NOR', code: 'NOR', group: 'I', confederation: 'UEFA',     flagUrl: 'https://flagcdn.com/no.svg' },
 
