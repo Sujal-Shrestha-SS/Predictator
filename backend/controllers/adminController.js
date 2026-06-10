@@ -509,31 +509,22 @@ const setFixtureResult = asyncHandler(async (req, res) => {
   const home = parseInt(homeScore);
   const away = parseInt(awayScore);
 
-  let winner = null;
-
-  if (home > away) {
-    winner = 'home';
-  } else if (away > home) {
-    winner = 'away';
-  } else if (penalties) {
-    winner =
-      Number(penaltyHomeScore) > Number(penaltyAwayScore)
-        ? 'home'
-        : 'away';
-  } else {
-    winner = 'draw';
-  }
+let winner;
+if (penalties && penaltyHomeScore != null && penaltyAwayScore != null) {
+  // Scores are level at 90min/AET — penalty shootout decides the winner
+  winner = parseInt(penaltyHomeScore) > parseInt(penaltyAwayScore) ? 'home' : 'away';
+} else {
+  winner = home > away ? 'home' : away > home ? 'away' : 'draw';
+}
 
 fixture.result = {
   homeScore: home,
   awayScore: away,
+  extraTime: !!extraTime,
+  penalties: !!penalties,
+  penaltyHomeScore: penalties ? parseInt(penaltyHomeScore) : null,
+  penaltyAwayScore: penalties ? parseInt(penaltyAwayScore) : null,
   winner,
-  extraTime: extraTime || false,
-  penalties: penalties || false,
-  penaltyHomeScore:
-    penaltyHomeScore !== undefined ? penaltyHomeScore : null,
-  penaltyAwayScore:
-    penaltyAwayScore !== undefined ? penaltyAwayScore : null,
 };
 
   fixture.status = 'completed';
