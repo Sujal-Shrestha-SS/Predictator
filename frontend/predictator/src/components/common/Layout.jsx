@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
+import api from '../../services/api';
+import toast from 'react-hot-toast';
 
 const SunIcon = () => (
   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -29,12 +31,162 @@ const XIcon = () => (
   </svg>
 );
 
+const ChevronDownIcon = () => (
+  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+  </svg>
+);
+
+// ── Inline modal shared between navbar dropdown and mobile menu ───────────────
+function LeagueModal({ mode, onClose, onSuccess }) {
+  const [value, setValue] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const inputRef = useRef(null);
+
+  useEffect(() => { inputRef.current?.focus(); }, []);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!value.trim()) return;
+    setSubmitting(true);
+    try {
+      if (mode === 'create') {
+        const res = await api.post('/leagues', { name: value.trim() });
+        toast.success(`League "${res.data.league.name}" created!`);
+        onSuccess(res.data.league.id || res.data.league._id);
+      } else {
+        const res = await api.post('/leagues/join', { code: value.trim() });
+        toast.success(res.data.message);
+        onSuccess(res.data.league._id || res.data.league.id);
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.error || `Failed to ${mode} league`);
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+      <div className="card w-full max-w-md p-6 animate-fade-in">
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="font-display text-xl text-[var(--text-primary)]">
+            {mode === 'create' ? 'Create a League' : 'Join a League'}
+          </h2>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] transition-colors"
+          >
+            ✕
+          </button>
+        </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">
+              {mode === 'create' ? 'League Name' : 'League Code'}
+            </label>
+            <input
+              ref={inputRef}
+              type="text"
+              value={value}
+              onChange={(e) =>
+                setValue(mode === 'join' ? e.target.value.toUpperCase() : e.target.value)
+              }
+              placeholder={mode === 'create' ? 'e.g. Office Champions' : 'e.g. A3F7C12B'}
+              maxLength={mode === 'create' ? 50 : 8}
+              className={`w-full px-4 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg-secondary)] text-[var(--text-primary)] focus:outline-none focus:border-primary-500 transition-colors ${
+                mode === 'join' ? 'font-mono uppercase tracking-widest text-center text-lg' : ''
+              }`}
+            />
+            <p className="text-xs text-[var(--text-secondary)] mt-1">
+              {mode === 'create'
+                ? 'A unique invite code will be generated automatically.'
+                : 'Ask your friend for their 8-character league code.'}
+            </p>
+          </div>
+          <div className="flex gap-3 pt-2">
+            <button type="button" onClick={onClose} className="btn-secondary flex-1">
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={submitting || !value.trim()}
+              className="btn-primary flex-1"
+            >
+              {submitting
+                ? mode === 'create' ? 'Creating…' : 'Joining…'
+                : mode === 'create' ? 'Create League' : 'Join League'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ── Leagues navbar dropdown (desktop) ────────────────────────────────────────
+function LeaguesDropdown({ onOpenModal }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  const navigate = useNavigate();
+
+  // Close on outside click
+  useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const isLeaguesActive = window.location.pathname.startsWith('/leagues');
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className={`nav-link flex items-center gap-1.5 ${isLeaguesActive ? 'active' : ''}`}
+      >
+        🛡️ Leagues
+        <ChevronDownIcon />
+      </button>
+
+      {open && (
+        <div className="absolute left-0 mt-1 w-52 card shadow-xl py-1.5 z-50 animate-fade-in">
+          <button
+            onClick={() => { setOpen(false); navigate('/leagues'); }}
+            className="w-full text-left px-4 py-2 text-sm text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors"
+          >
+            🏆 My Leagues
+          </button>
+          <div className="border-t border-[var(--border)] my-1" />
+          <button
+            onClick={() => { setOpen(false); onOpenModal('create'); }}
+            className="w-full text-left px-4 py-2 text-sm text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors"
+          >
+            ➕ Create League
+          </button>
+          <button
+            onClick={() => { setOpen(false); onOpenModal('join'); }}
+            className="w-full text-left px-4 py-2 text-sm text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors"
+          >
+            🔑 Join with Code
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function Layout() {
   const { user, logout } = useAuth();
   const { dark, toggleTheme } = useTheme();
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [modal, setModal] = useState(null); // 'create' | 'join' | null
   const navigate = useNavigate();
+
+  const handleModalSuccess = (leagueId) => {
+    setModal(null);
+    navigate(`/leagues/${leagueId}`);
+  };
 
   const navLinks = [
     { to: '/', label: '🏠 Home', end: true },
@@ -75,6 +227,8 @@ export default function Layout() {
                   {link.label}
                 </NavLink>
               ))}
+              {/* Leagues dropdown — only for logged-in users */}
+              {user && <LeaguesDropdown onOpenModal={setModal} />}
             </div>
 
             {/* Right actions */}
@@ -164,6 +318,29 @@ export default function Layout() {
                 {link.label}
               </NavLink>
             ))}
+            {user && (
+              <>
+                <NavLink
+                  to="/leagues"
+                  onClick={() => setMenuOpen(false)}
+                  className={({ isActive }) => `nav-link block ${isActive ? 'active' : ''}`}
+                >
+                  🛡️ My Leagues
+                </NavLink>
+                <button
+                  onClick={() => { setMenuOpen(false); setModal('create'); }}
+                  className="nav-link block w-full text-left"
+                >
+                  ➕ Create League
+                </button>
+                <button
+                  onClick={() => { setMenuOpen(false); setModal('join'); }}
+                  className="nav-link block w-full text-left"
+                >
+                  🔑 Join League
+                </button>
+              </>
+            )}
           </div>
         )}
       </nav>
@@ -177,9 +354,18 @@ export default function Layout() {
       <footer className="border-t border-[var(--border)] mt-20 py-8">
         <div className="max-w-7xl mx-auto px-4 text-center text-[var(--text-secondary)] text-sm">
           <p className="font-display text-lg text-[var(--text-primary)] mb-2">PREDICTATOR</p>
-          <p>FIFA World Cup 2026 Prediction Platform </p>
+          <p>FIFA World Cup 2026 Prediction Platform · Built with ⚽ and ❤️</p>
         </div>
       </footer>
+
+      {/* League modals — triggered from anywhere in the navbar */}
+      {modal && (
+        <LeagueModal
+          mode={modal}
+          onClose={() => setModal(null)}
+          onSuccess={handleModalSuccess}
+        />
+      )}
     </div>
   );
 }
