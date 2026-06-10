@@ -73,7 +73,7 @@ export default function HomePage() {
         <div className="absolute bottom-6 right-6 hidden lg:flex gap-12">
           <HeroStat label="Teams" value="48"  />
           <HeroStat label="Matches" value="104"  />
-          <HeroStat label="Days" value="32"  />
+          <HeroStat label="Days" value="39"  />
         </div>
       </div>
 

@@ -205,9 +205,7 @@ export default function Layout() {
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <NavLink to="/" className="flex items-center gap-2 group">
-              <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-primary-700 rounded-lg flex items-center justify-center text-white font-display text-sm">
-                ⚽
-              </div>
+              
               <span className="font-display text-xl tracking-wider text-[var(--text-primary)] group-hover:text-primary-500 transition-colors">
                 PREDICTATOR
               </span>
@@ -354,7 +352,7 @@ export default function Layout() {
       <footer className="border-t border-[var(--border)] mt-20 py-8">
         <div className="max-w-7xl mx-auto px-4 text-center text-[var(--text-secondary)] text-sm">
           <p className="font-display text-lg text-[var(--text-primary)] mb-2">PREDICTATOR</p>
-          <p>FIFA World Cup 2026 Prediction Platform · Built with ⚽ and ❤️</p>
+          <p>FIFA World Cup 2026 Prediction Platform</p>
         </div>
       </footer>
 

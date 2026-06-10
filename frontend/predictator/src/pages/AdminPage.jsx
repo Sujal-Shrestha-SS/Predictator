@@ -428,12 +428,12 @@ export default function AdminPage() {
   };
 
   const TABS = [
-    { id: 'dashboard', label: '📊 Dashboard' },
-    { id: 'fixtures',  label: '⚽ Fixtures & Results' },
-    { id: 'sync',      label: '🔧 Tools' },
-    { id: 'teams',     label: '🏳️ Teams' },
-    { id: 'users',     label: '👥 Users' },
-    { id: 'leagues', label: '🛡️ Leagues' },
+    { id: 'dashboard', label: ' Dashboard' },
+    { id: 'fixtures',  label: ' Fixtures & Results' },
+    { id: 'sync',      label: ' Tools' },
+    { id: 'teams',     label: ' Teams' },
+    { id: 'users',     label: ' Users' },
+    { id: 'leagues', label: ' Leagues' },
   ];
 
   return (

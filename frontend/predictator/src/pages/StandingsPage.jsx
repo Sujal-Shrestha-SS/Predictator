@@ -78,7 +78,7 @@ function GroupTable({ group, standings }) {
 
           <span className="flex items-center">
             <span className="w-3 h-3 bg-yellow-500 rounded-sm mr-1" />
-            Still alive (best 3rd place teams)
+            Still alive
           </span>
         </div>
       </div>
