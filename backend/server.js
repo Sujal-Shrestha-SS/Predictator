@@ -16,6 +16,7 @@ const leaderboardRoutes = require('./routes/leaderboard');
 const standingsRoutes   = require('./routes/standings');
 const adminRoutes       = require('./routes/admin');
 const userRoutes        = require('./routes/users');
+const leagueRoutes = require('./routes/leagues');
 
 const app = express();
 
@@ -65,6 +66,7 @@ app.use('/api/leaderboard', leaderboardRoutes);
 app.use('/api/standings',   standingsRoutes);
 app.use('/api/admin',       adminRoutes);
 app.use('/api/users',       userRoutes);
+app.use('/api/leagues', leagueRoutes);
 
 // ─── 404 ──────────────────────────────────────────────────────────────────────
 app.use((req, res) => {
