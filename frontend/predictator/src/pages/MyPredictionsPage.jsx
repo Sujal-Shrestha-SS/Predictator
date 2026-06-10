@@ -6,11 +6,24 @@ import { format } from 'date-fns';
 import { SkeletonCard } from '../components/common/LoadingScreen';
 
 const pointTypeConfig = {
-  exact: { label: '⭐ Exact Score', cls: 'badge-green' },
-  correct_result: { label: '✓ Correct Result', cls: 'badge-blue' },
-  correct_draw: { label: '≈ Correct Draw', cls: 'badge-yellow' },
-  incorrect: { label: '✗ Incorrect', cls: 'badge-red' },
+  exact:          { label: '⭐ Exact Score',    cls: 'badge-green' },
+  correct_result: { label: '✓ Correct Result',  cls: 'badge-blue' },
+  correct_draw:   { label: '≈ Correct Draw',    cls: 'badge-yellow' },
+  incorrect:      { label: '✗ Incorrect',       cls: 'badge-red' },
 };
+
+// Returns a suffix like "(AET)" or "(PENS 4–3)" for knockout matches
+function resultSuffix(result) {
+  if (!result) return '';
+  if (result.penalties) {
+    const ph = result.penaltyHomeScore;
+    const pa = result.penaltyAwayScore;
+    const score = ph != null && pa != null ? ` ${ph}–${pa}` : '';
+    return `(PENS${score})`;
+  }
+  if (result.extraTime) return '(AET)';
+  return '';
+}
 
 function PredictionRow({ prediction }) {
   const { fixture, homeScore, awayScore, points, pointType, isCalculated } = prediction;
@@ -18,6 +31,7 @@ function PredictionRow({ prediction }) {
 
   const isCompleted = fixture.status === 'completed';
   const ptConfig = isCalculated && pointType ? pointTypeConfig[pointType] : null;
+  const suffix = resultSuffix(fixture.result);
 
   return (
     <Link to={`/fixtures/${fixture._id}`} className="block hover:bg-[var(--bg-secondary)] transition-colors">
@@ -59,6 +73,9 @@ function PredictionRow({ prediction }) {
               <p className="font-display text-xl text-[var(--text-primary)]">
                 {fixture.result?.homeScore}–{fixture.result?.awayScore}
               </p>
+              {suffix && (
+                <p className="text-xs text-[var(--text-secondary)] mt-0.5">{suffix}</p>
+              )}
             </div>
           )}
 
@@ -125,10 +142,10 @@ export default function MyPredictionsPage() {
       {stats && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
           {[
-            { label: 'Total Points', value: stats.totalPoints, color: 'text-primary-500', icon: '🏆' },
-            { label: 'Exact Scores', value: stats.exact, color: 'text-green-500', icon: '⭐' },
-            { label: 'Correct Results', value: stats.correctResult + stats.correctDraw, color: 'text-blue-500', icon: '✓' },
-            { label: 'Predictions', value: stats.total, color: 'text-[var(--text-primary)]', icon: '🎯' },
+            { label: 'Total Points',    value: stats.totalPoints,                       color: 'text-primary-500',           icon: '🏆' },
+            { label: 'Exact Scores',    value: stats.exact,                             color: 'text-green-500',             icon: '⭐' },
+            { label: 'Correct Results', value: stats.correctResult + stats.correctDraw, color: 'text-blue-500',              icon: '✓' },
+            { label: 'Predictions',     value: stats.total,                             color: 'text-[var(--text-primary)]', icon: '🎯' },
           ].map((s) => (
             <div key={s.label} className="card p-4 text-center">
               <div className="text-2xl mb-1">{s.icon}</div>
@@ -142,18 +159,22 @@ export default function MyPredictionsPage() {
       {/* Filter */}
       <div className="flex gap-2 mb-4 flex-wrap">
         {[
-          { value: '', label: 'All' },
-          { value: 'group_stage', label: 'Group Stage' },
-          { value: 'round_of_32', label: 'R32' },
-          { value: 'round_of_16', label: 'R16' },
+          { value: '',             label: 'All' },
+          { value: 'group_stage',  label: 'Group Stage' },
+          { value: 'round_of_32',  label: 'R32' },
+          { value: 'round_of_16',  label: 'R16' },
           { value: 'quarterfinal', label: 'QF' },
-          { value: 'semifinal', label: 'SF' },
-          { value: 'final', label: 'Final' },
+          { value: 'semifinal',    label: 'SF' },
+          { value: 'final',        label: 'Final' },
         ].map((opt) => (
           <button
             key={opt.value}
             onClick={() => setStage(opt.value)}
-            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${stage === opt.value ? 'bg-primary-600 text-white' : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+              stage === opt.value
+                ? 'bg-primary-600 text-white'
+                : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+            }`}
           >
             {opt.label}
           </button>
