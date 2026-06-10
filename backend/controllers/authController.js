@@ -44,24 +44,28 @@ const googleLogin = asyncHandler(async (req, res) => {
   const role = adminEmails.includes(email) ? 'admin' : 'user';
 
   // Upsert user
-  let user = await User.findOneAndUpdate(
-    { googleId },
-    {
-      $set: {
-        email,
-        username: name,
-        avatar: picture,
-        role,
-        lastLoginAt: new Date(),
-      },
-      $setOnInsert: {
-        googleId,
-        totalPoints: 0,
-      },
-    },
-    { upsert: true, new: true, runValidators: true }
-  );
+ let user = await User.findOne({ googleId });
 
+if (!user) {
+  user = await User.create({
+    googleId,
+    email,
+    username: name,
+    avatar: picture,
+    role,
+    totalPoints: 0,
+    lastLoginAt: new Date(),
+  });
+} else {
+  user.email = email;
+  user.avatar = picture;
+  user.role = role;
+  user.lastLoginAt = new Date();
+
+  // IMPORTANT:
+  // Don't overwrite custom username
+  await user.save();
+}
 
   // Create JWT Token - This is your app's login session token
   const token = generateToken(user._id);
@@ -104,4 +108,59 @@ const logout = asyncHandler(async (req, res) => {
   res.json({ message: 'Logged out successfully' });
 });
 
-module.exports = { googleLogin, getMe, logout };
+
+const updateUsername = asyncHandler(async (req, res) => {
+  const { username } = req.body;
+
+  if (!username?.trim()) {
+    return res.status(400).json({
+      error: 'Username is required',
+    });
+  }
+
+  const trimmed = username.trim();
+
+  if (trimmed.length < 3 || trimmed.length > 20) {
+    return res.status(400).json({
+      error: 'Username must be 3-20 characters',
+    });
+  }
+
+  const existingUser = await User.findOne({
+    username: trimmed,
+    _id: { $ne: req.user._id },
+  });
+
+  if (existingUser) {
+    return res.status(400).json({
+      error: 'Username already taken',
+    });
+  }
+
+  const user = await User.findByIdAndUpdate(
+    req.user._id,
+    {
+      username: trimmed,
+    },
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
+
+  res.json({
+    message: 'Username updated successfully',
+    user: {
+      id: user._id,
+      username: user.username,
+    },
+  });
+});
+
+
+module.exports = {
+  googleLogin,
+  getMe,
+  logout,
+  updateUsername,
+};
