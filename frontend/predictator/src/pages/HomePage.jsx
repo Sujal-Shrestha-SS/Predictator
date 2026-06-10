@@ -162,7 +162,7 @@ export default function HomePage() {
                 { icon: '🔐', title: 'Sign in', desc: 'Login with your Google account' },
                 { icon: '🎯', title: 'Predict', desc: 'Enter your score prediction before kickoff' },
                 { icon: '⏱️', title: 'Wait', desc: 'Predictions lock 1 hour before kickoff' },
-                { icon: '🏆', title: 'Score', desc: 'Exact: 30pts · Winner: 20pts · Draw: 15pts' },
+                { icon: '🏆', title: 'Score', desc: 'Exact: 50pts · Winner: 20pts · Draw: 15pts' },
               ].map((step) => (
                 <div key={step.title} className="flex gap-3">
                   <span className="text-2xl flex-shrink-0">{step.icon}</span>
