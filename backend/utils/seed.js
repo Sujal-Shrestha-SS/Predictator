@@ -13,14 +13,14 @@ require('dotenv').config();
 const WC_2026_TEAMS = [
   // Group A
   { name: 'Mexico',          shortName: 'MEX', code: 'MEX', group: 'A', confederation: 'CONCACAF', flagUrl: 'https://flagcdn.com/mx.svg' },
-  { name: 'South Africa',    shortName: 'RSA', code: 'RSA', group: 'A', confederation: 'CONMEBOL', flagUrl: 'https://flagcdn.com/za.svg' },
+  { name: 'South Africa',    shortName: 'RSA', code: 'RSA', group: 'A', confederation: 'CAF', flagUrl: 'https://flagcdn.com/za.svg' },
   { name: 'South Korea',     shortName: 'KOR', code: 'KOR', group: 'A', confederation: 'AFC',      flagUrl: 'https://flagcdn.com/kr.svg' },
   { name: 'Czech Republic',  shortName: 'CZE', code: 'CZE', group: 'A', confederation: 'UEFA',     flagUrl: 'https://flagcdn.com/cz.svg' },
 
   // Group B
   { name: 'Canada',                  shortName: 'CAN', code: 'CAN', group: 'B', confederation: 'CONCACAF', flagUrl: 'https://flagcdn.com/ca.svg' },
   { name: 'Bosnia and Herzegovina',  shortName: 'BIH', code: 'BIH', group: 'B', confederation: 'UEFA',     flagUrl: 'https://flagcdn.com/ba.svg' },
-  { name: 'Qatar',                   shortName: 'QAT', code: 'QAT', group: 'B', confederation: 'CAF',      flagUrl: 'https://flagcdn.com/qa.svg' },
+  { name: 'Qatar',                   shortName: 'QAT', code: 'QAT', group: 'B', confederation: 'AFC',      flagUrl: 'https://flagcdn.com/qa.svg' },
   { name: 'Switzerland',             shortName: 'SUI', code: 'SUI', group: 'B', confederation: 'UEFA',     flagUrl: 'https://flagcdn.com/ch.svg' },
 
   // Group C
@@ -37,7 +37,7 @@ const WC_2026_TEAMS = [
 
   // Group E
   { name: 'Germany',        shortName: 'GER', code: 'GER', group: 'E', confederation: 'UEFA',     flagUrl: 'https://flagcdn.com/de.svg' },
-  { name: 'Curacao',        shortName: 'CUR', code: 'CUR', group: 'E', confederation: 'CONMEBOL', flagUrl: 'https://flagcdn.com/cw.svg' },
+  { name: 'Curacao',        shortName: 'CUR', code: 'CUR', group: 'E', confederation: 'CONCACAF', flagUrl: 'https://flagcdn.com/cw.svg' },
   { name: 'Ivory Coast',    shortName: 'CIV', code: 'CIV', group: 'E', confederation: 'CAF',      flagUrl: 'https://flagcdn.com/ci.svg' },
   { name: 'Ecuador',        shortName: 'ECU', code: 'ECU', group: 'E', confederation: 'CONMEBOL', flagUrl: 'https://flagcdn.com/ec.svg' },
 
@@ -51,7 +51,7 @@ const WC_2026_TEAMS = [
   { name: 'Belgium',       shortName: 'BEL', code: 'BEL', group: 'G', confederation: 'UEFA',     flagUrl: 'https://flagcdn.com/be.svg' },
   { name: 'Egypt',         shortName: 'EGY', code: 'EGY', group: 'G', confederation: 'CAF',      flagUrl: 'https://flagcdn.com/eg.svg' },
   { name: 'Iran',          shortName: 'IRN', code: 'IRN', group: 'G', confederation: 'AFC',      flagUrl: 'https://flagcdn.com/ir.svg' },
-  { name: 'New Zealand',   shortName: 'NZL', code: 'NZL', group: 'G', confederation: 'AFC',      flagUrl: 'https://flagcdn.com/nz.svg' },
+  { name: 'New Zealand',   shortName: 'NZL', code: 'NZL', group: 'G', confederation: 'OFC',      flagUrl: 'https://flagcdn.com/nz.svg' },
 
   // Group H
   { name: 'Spain',         shortName: 'ESP', code: 'ESP', group: 'H', confederation: 'UEFA',     flagUrl: 'https://flagcdn.com/es.svg' },
@@ -73,8 +73,8 @@ const WC_2026_TEAMS = [
 
   // Group K
   { name: 'Portugal',       shortName: 'POR', code: 'POR', group: 'K', confederation: 'UEFA',     flagUrl: 'https://flagcdn.com/pt.svg' },
-  { name: 'DR Congo',       shortName: 'COD', code: 'COD', group: 'K', confederation: 'CONMEBOL', flagUrl: 'https://flagcdn.com/cd.svg' },
-  { name: 'Uzbekistan',     shortName: 'UZB', code: 'UZB', group: 'K', confederation: 'CONCACAF', flagUrl: 'https://flagcdn.com/uz.svg' },
+  { name: 'DR Congo',       shortName: 'COD', code: 'COD', group: 'K', confederation: 'CAF', flagUrl: 'https://flagcdn.com/cd.svg' },
+  { name: 'Uzbekistan',     shortName: 'UZB', code: 'UZB', group: 'K', confederation: 'AFC', flagUrl: 'https://flagcdn.com/uz.svg' },
   { name: 'Colombia',       shortName: 'COL', code: 'COL', group: 'K', confederation: 'CONMEBOL', flagUrl: 'https://flagcdn.com/co.svg' },
 
   // Group L
