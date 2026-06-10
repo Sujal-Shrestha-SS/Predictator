@@ -1,10 +1,15 @@
-const { getGroupStandings, getAllGroupStandings, recalculateGroupStandings } = require('../services/standingsService');
+const { getGroupStandings, getAllGroupStandings, recalculateGroupStandings, getBestThirdPlacedTeams } = require('../services/standingsService');
 const { asyncHandler } = require('../middleware/errorHandler');
 
 // GET /api/standings
 const getAllStandings = asyncHandler(async (req, res) => {
   const standings = await getAllGroupStandings();
-  res.json({ standings });
+  const bestThirdPlacedTeams = await getBestThirdPlacedTeams();
+
+  res.json({
+    standings,
+    bestThirdPlacedTeams,
+  });
 });
 
 // GET /api/standings/:group
