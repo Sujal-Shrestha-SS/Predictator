@@ -8,6 +8,8 @@ export default function ProfilePage() {
   const [stats, setStats] = useState(null);
   const [rank, setRank] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [newUsername, setNewUsername] = useState('');
+  const [savingUsername, setSavingUsername] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -26,9 +28,43 @@ export default function ProfilePage() {
     refreshUser();
   }, [user.id, refreshUser]);
 
+
+  useEffect(() => {
+    setNewUsername(user.username || '');
+  }, [user.username]);
+
   const accuracy = stats?.total > 0
     ? Math.round(((stats.exact + stats.correctResult + stats.correctDraw) / stats.total) * 100)
     : 0;
+
+    const saveUsername = async () => {
+    const trimmed = newUsername.trim();
+
+    if (!trimmed) {
+      alert('Username cannot be empty');
+      return;
+    }
+
+    try {
+      setSavingUsername(true);
+
+      await api.put('/auth/username', {
+        username: trimmed,
+      });
+
+      await refreshUser();
+
+      alert('Username updated successfully');
+    } catch (err) {
+      alert(
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        'Failed to update username'
+      );
+    } finally {
+      setSavingUsername(false);
+    }
+  };
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
@@ -73,6 +109,44 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+
+
+        {/* Account Settings */}
+        <div className="card p-6 mb-6">
+          <h3 className="font-display text-xl text-[var(--text-primary)] mb-5">
+            ACCOUNT SETTINGS
+          </h3>
+
+          <div className="space-y-2">
+            <label className="block text-sm text-[var(--text-secondary)]">
+              Username
+            </label>
+
+            <div className="flex flex-col sm:flex-row gap-3">
+              <input
+                type="text"
+                value={newUsername}
+                onChange={(e) => setNewUsername(e.target.value)}
+                maxLength={20}
+                className="flex-1 px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg-secondary)] text-[var(--text-primary)]"
+                placeholder="Enter username"
+              />
+
+              <button
+                onClick={saveUsername}
+                disabled={savingUsername}
+                className="btn-primary"
+              >
+                {savingUsername ? 'Updating...' : 'Update Username'}
+              </button>
+            </div>
+
+            <p className="text-xs text-[var(--text-secondary)]">
+              Username must be unique and between 3–20 characters.
+            </p>
+          </div>
+        </div>
+
 
       {/* Prediction breakdown */}
       {stats && (
