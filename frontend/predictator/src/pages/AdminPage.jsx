@@ -4,8 +4,6 @@ import api from '../services/api';
 import toast from 'react-hot-toast';
 import { Spinner } from '../components/common/LoadingScreen';
 
-
-
 function StatCard({ icon, label, value, color = 'text-primary-500' }) {
   return (
     <div className="card p-5">
@@ -25,8 +23,6 @@ function ActionButton({ label, icon, onClick, loading, color = 'btn-secondary' }
   );
 }
 
-
-
 const STAGE_LABELS = {
   group_stage: 'Group Stage',
   round_of_32: 'Round of 32',
@@ -43,7 +39,6 @@ const STATUS_BADGE = {
 };
 
 function ResultModal({ fixture, onClose, onSaved }) {
-  
   const [homeScore, setHomeScore] = useState(fixture.result?.homeScore ?? '');
   const [awayScore, setAwayScore] = useState(fixture.result?.awayScore ?? '');
   const [extraTime, setExtraTime] = useState(fixture.result?.extraTime || false);
@@ -84,20 +79,17 @@ function ResultModal({ fixture, onClose, onSaved }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
       <div className="card w-full max-w-md p-6 space-y-5">
-        {/* Header */}
         <div className="flex items-center justify-between">
           <h2 className="font-display text-xl text-[var(--text-primary)]">ENTER RESULT</h2>
           <button onClick={onClose} className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-xl">✕</button>
         </div>
 
-        {/* Match title */}
         <div className="text-center text-sm text-[var(--text-secondary)]">
           <span className="font-medium text-[var(--text-primary)]">{home?.name}</span>
           <span className="mx-2">vs</span>
           <span className="font-medium text-[var(--text-primary)]">{away?.name}</span>
         </div>
 
-        {/* Score inputs */}
         <div className="flex items-center gap-4 justify-center">
           <div className="text-center flex-1">
             <div className="flex items-center gap-2 mb-1 justify-center">
@@ -105,10 +97,7 @@ function ResultModal({ fixture, onClose, onSaved }) {
               <span className="text-xs font-semibold text-[var(--text-secondary)]">{home?.shortName || home?.name}</span>
             </div>
             <input
-              type="number"
-              min="0"
-              max="99"
-              value={homeScore}
+              type="number" min="0" max="99" value={homeScore}
               onChange={(e) => setHomeScore(e.target.value)}
               className="w-20 text-center text-3xl font-display px-2 py-3 rounded-xl border-2 border-[var(--border)] bg-[var(--bg-secondary)] text-[var(--text-primary)] focus:outline-none focus:border-primary-500"
               placeholder="0"
@@ -123,10 +112,7 @@ function ResultModal({ fixture, onClose, onSaved }) {
               <span className="text-xs font-semibold text-[var(--text-secondary)]">{away?.shortName || away?.name}</span>
             </div>
             <input
-              type="number"
-              min="0"
-              max="99"
-              value={awayScore}
+              type="number" min="0" max="99" value={awayScore}
               onChange={(e) => setAwayScore(e.target.value)}
               className="w-20 text-center text-3xl font-display px-2 py-3 rounded-xl border-2 border-[var(--border)] bg-[var(--bg-secondary)] text-[var(--text-primary)] focus:outline-none focus:border-primary-500"
               placeholder="0"
@@ -134,12 +120,10 @@ function ResultModal({ fixture, onClose, onSaved }) {
           </div>
         </div>
 
-        {/* Extra time / penalties */}
         <div className="space-y-3">
           <label className="flex items-center gap-3 cursor-pointer">
             <input
-              type="checkbox"
-              checked={extraTime}
+              type="checkbox" checked={extraTime}
               onChange={(e) => { setExtraTime(e.target.checked); if (!e.target.checked) setPenalties(false); }}
               className="w-4 h-4 accent-primary-500"
             />
@@ -149,8 +133,7 @@ function ResultModal({ fixture, onClose, onSaved }) {
           {extraTime && (
             <label className="flex items-center gap-3 cursor-pointer ml-6">
               <input
-                type="checkbox"
-                checked={penalties}
+                type="checkbox" checked={penalties}
                 onChange={(e) => setPenalties(e.target.checked)}
                 className="w-4 h-4 accent-primary-500"
               />
@@ -163,18 +146,14 @@ function ResultModal({ fixture, onClose, onSaved }) {
               <p className="text-xs text-[var(--text-secondary)] font-semibold">PENALTY SHOOTOUT SCORE</p>
               <div className="flex items-center gap-3">
                 <input
-                  type="number"
-                  min="0"
-                  value={penaltyHome}
+                  type="number" min="0" value={penaltyHome}
                   onChange={(e) => setPenaltyHome(e.target.value)}
                   placeholder={home?.shortName || 'Home'}
                   className="w-20 text-center px-2 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg-primary)] text-[var(--text-primary)] text-sm focus:outline-none focus:border-primary-500"
                 />
                 <span className="text-[var(--text-secondary)] text-sm">–</span>
                 <input
-                  type="number"
-                  min="0"
-                  value={penaltyAway}
+                  type="number" min="0" value={penaltyAway}
                   onChange={(e) => setPenaltyAway(e.target.value)}
                   placeholder={away?.shortName || 'Away'}
                   className="w-20 text-center px-2 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg-primary)] text-[var(--text-primary)] text-sm focus:outline-none focus:border-primary-500"
@@ -184,14 +163,12 @@ function ResultModal({ fixture, onClose, onSaved }) {
           )}
         </div>
 
-        {/* Note about re-scoring */}
         {fixture.scoresCalculated && (
           <p className="text-xs text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-900/20 px-3 py-2 rounded-lg">
             ⚠️ This match already has points calculated. Saving will reset and recalculate all predictions.
           </p>
         )}
 
-        {/* Actions */}
         <div className="flex gap-3 pt-1">
           <button onClick={onClose} className="btn-secondary flex-1">Cancel</button>
           <button onClick={handleSave} disabled={saving} className="btn-primary flex-1 flex items-center justify-center gap-2">
@@ -204,18 +181,159 @@ function ResultModal({ fixture, onClose, onSaved }) {
   );
 }
 
+// ── Admin leagues tab with expandable member rows ─────────────────────────────
+function LeaguesAdminTab({ leagues, leaguesLoading, leagueSearch, setLeagueSearch }) {
+  const [expandedId, setExpandedId] = useState(null);
+  const [members, setMembers] = useState({});
+  const [loadingId, setLoadingId] = useState(null);
+
+  const toggleLeague = async (league) => {
+    const id = league.id;
+    if (expandedId === id) {
+      setExpandedId(null);
+      return;
+    }
+    setExpandedId(id);
+    if (members[id]) return;
+    setLoadingId(id);
+    try {
+      const res = await api.get(`/leagues/admin/${id}`);
+      setMembers((prev) => ({ ...prev, [id]: res.data.leaderboard }));
+    } catch {
+      toast.error('Failed to load league members');
+    } finally {
+      setLoadingId(null);
+    }
+  };
+
+  const filtered = leagues.filter((l) =>
+    !leagueSearch ||
+    l.name.toLowerCase().includes(leagueSearch.toLowerCase()) ||
+    l.code.includes(leagueSearch.toUpperCase())
+  );
+
+  return (
+    <div className="space-y-4">
+      <div className="card p-4">
+        <input
+          type="text"
+          placeholder="Search by name or code…"
+          value={leagueSearch}
+          onChange={(e) => setLeagueSearch(e.target.value)}
+          className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg-secondary)] text-[var(--text-primary)] text-sm focus:outline-none focus:border-primary-500"
+        />
+      </div>
+
+      <div className="card overflow-hidden">
+        <div className="px-4 py-3 bg-[var(--bg-secondary)] border-b border-[var(--border)] grid grid-cols-12 text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
+          <div className="col-span-4">League</div>
+          <div className="col-span-3">Creator</div>
+          <div className="col-span-2 text-center">Code</div>
+          <div className="col-span-2 text-center">Members</div>
+          <div className="col-span-1 text-right">Created</div>
+        </div>
+
+        <div className="divide-y divide-[var(--border)] max-h-[40rem] overflow-y-auto">
+          {leaguesLoading ? (
+            <div className="p-8 text-center text-[var(--text-secondary)]">Loading leagues…</div>
+          ) : filtered.length === 0 ? (
+            <div className="p-8 text-center text-[var(--text-secondary)]">No leagues found</div>
+          ) : filtered.map((l) => {
+            const isExpanded = expandedId === l.id;
+            const isLoading  = loadingId === l.id;
+            const leagueMembers = members[l.id] || [];
+
+            return (
+              <div key={l.id}>
+                <button
+                  onClick={() => toggleLeague(l)}
+                  className="w-full grid grid-cols-12 gap-2 items-center px-4 py-3 hover:bg-[var(--bg-secondary)] transition-colors text-left"
+                >
+                  <div className="col-span-4 min-w-0 flex items-center gap-2">
+                    <span className={`text-xs transition-transform inline-block ${isExpanded ? 'rotate-90' : ''}`}>▶</span>
+                    <p className="text-sm font-medium text-[var(--text-primary)] truncate">{l.name}</p>
+                  </div>
+                  <div className="col-span-3 flex items-center gap-2 min-w-0">
+                    <img
+                      src={l.creator?.avatar || `https://ui-avatars.com/api/?name=${l.creator?.username}&size=24&background=2244f5&color=fff`}
+                      alt=""
+                      className="w-6 h-6 rounded-full border border-[var(--border)] flex-shrink-0"
+                    />
+                    <span className="text-xs text-[var(--text-secondary)] truncate">{l.creator?.username}</span>
+                  </div>
+                  <div className="col-span-2 text-center">
+                    <span className="font-mono text-xs bg-[var(--bg-secondary)] border border-[var(--border)] px-2 py-0.5 rounded-md text-[var(--text-primary)]">
+                      {l.code}
+                    </span>
+                  </div>
+                  <div className="col-span-2 text-center text-sm text-[var(--text-secondary)]">
+                    {l.memberCount}
+                  </div>
+                  <div className="col-span-1 text-right text-xs text-[var(--text-secondary)]">
+                    {new Date(l.createdAt).toLocaleDateString()}
+                  </div>
+                </button>
+
+                {isExpanded && (
+                  <div className="bg-[var(--bg-secondary)] border-t border-[var(--border)] px-6 py-3">
+                    {isLoading ? (
+                      <p className="text-xs text-[var(--text-secondary)] py-2">Loading members…</p>
+                    ) : leagueMembers.length === 0 ? (
+                      <p className="text-xs text-[var(--text-secondary)] py-2">No members yet</p>
+                    ) : (
+                      <div className="space-y-2">
+                        <p className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-2">
+                          Members · {leagueMembers.length}
+                        </p>
+                        {leagueMembers.map((m) => (
+                          <div key={m.id} className="flex items-center gap-3">
+                            <span className="w-5 text-xs font-mono text-[var(--text-secondary)] text-right flex-shrink-0">
+                              {m.rank}
+                            </span>
+                            <img
+                              src={m.avatar || `https://ui-avatars.com/api/?name=${m.username}&size=28&background=2244f5&color=fff`}
+                              alt=""
+                              className="w-7 h-7 rounded-full border border-[var(--border)] flex-shrink-0"
+                            />
+                            <span className="flex-1 text-sm text-[var(--text-primary)] truncate">
+                              {m.username}
+                              {m.id?.toString() === l.creator?._id?.toString() && (
+                                <span className="ml-1.5 text-xs text-primary-500">(admin)</span>
+                              )}
+                            </span>
+                            <span className="text-xs font-mono text-[var(--text-secondary)]">
+                              {m.stats?.exactScores ?? 0}🎯 &nbsp;{m.totalPoints} pts
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminPage() {
   const navigate = useNavigate();
-  const [stats, setStats]             = useState(null);
-  const [users, setUsers]             = useState([]);
-  const [teams, setTeams]             = useState([]);
-  const [fixtures, setFixtures]       = useState([]);
-  const [fixtureFilter, setFixtureFilter] = useState({ status: '', stage: '', group: '' });
-  const [tab, setTab]                 = useState('dashboard');
-  const [loadingAction, setLoadingAction] = useState('');
+  const [stats, setStats]                     = useState(null);
+  const [users, setUsers]                     = useState([]);
+  const [teams, setTeams]                     = useState([]);
+  const [fixtures, setFixtures]               = useState([]);
+  const [fixtureFilter, setFixtureFilter]     = useState({ status: '', stage: '', group: '' });
+  const [tab, setTab]                         = useState('dashboard');
+  const [loadingAction, setLoadingAction]     = useState('');
   const [loadingFixtures, setLoadingFixtures] = useState(false);
   const [selectedFixture, setSelectedFixture] = useState(null);
-  const [newTeam, setNewTeam]         = useState({ name: '', shortName: '', code: '', confederation: 'UEFA', flagUrl: '', group: '' });
+  const [newTeam, setNewTeam]                 = useState({ name: '', shortName: '', code: '', confederation: 'UEFA', flagUrl: '', group: '' });
+  const [leagues, setLeagues]                 = useState([]);
+  const [leaguesLoading, setLeaguesLoading]   = useState(false);
+  const [leagueSearch, setLeagueSearch]       = useState('');
 
   useEffect(() => {
     api.get('/admin/stats').then((res) => setStats(res.data.stats)).catch(() => {});
@@ -227,6 +345,13 @@ export default function AdminPage() {
     }
     if (tab === 'teams') {
       api.get('/admin/teams').then((res) => setTeams(res.data.teams || [])).catch(() => {});
+    }
+    if (tab === 'leagues') {
+      setLeaguesLoading(true);
+      api.get('/leagues/admin/all')
+        .then((res) => setLeagues(res.data.leagues || []))
+        .catch(() => {})
+        .finally(() => setLeaguesLoading(false));
     }
   }, [tab]);
 
@@ -276,7 +401,6 @@ export default function AdminPage() {
     setFixtures((prev) =>
       prev.map((f) => (f._id === updatedFixture._id ? { ...f, ...updatedFixture } : f))
     );
-    // Refresh stats
     api.get('/admin/stats').then((res) => setStats(res.data.stats)).catch(() => {});
   };
 
@@ -286,6 +410,7 @@ export default function AdminPage() {
     { id: 'sync',      label: '🔧 Tools' },
     { id: 'teams',     label: '🏳️ Teams' },
     { id: 'users',     label: '👥 Users' },
+    { id: 'leagues',   label: '🛡️ Leagues' },
   ];
 
   return (
@@ -317,349 +442,181 @@ export default function AdminPage() {
       {tab === 'dashboard' && (
         <div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-            <StatCard icon="👥" label="Total Users"       value={stats?.users}           color="text-blue-500" />
-            <StatCard icon="📅" label="Fixtures"          value={stats?.fixtures}         color="text-primary-500" />
-            <StatCard icon="🎯" label="Predictions"       value={stats?.predictions}      color="text-green-500" />
+            <StatCard icon="👥" label="Total Users"      value={stats?.users}          color="text-blue-500" />
+            <StatCard icon="📅" label="Fixtures"         value={stats?.fixtures}        color="text-primary-500" />
+            <StatCard icon="🎯" label="Predictions"      value={stats?.predictions}     color="text-green-500" />
             <StatCard icon="✅" label="Completed Matches" value={stats?.completedMatches} color="text-yellow-500" />
           </div>
-          <div className="card p-6">
-            <h3 className="font-display text-xl text-[var(--text-primary)] mb-4">QUICK INFO</h3>
-            <div className="space-y-2 text-sm text-[var(--text-secondary)]">
-              <p>• Use <strong>Fixtures &amp; Results</strong> to enter final scores — points are calculated automatically</p>
-              <p>• Use <strong>Teams</strong> to manually add or edit teams</p>
-              <p>• Use <strong>Tools</strong> to recalculate points or generate the knockout bracket</p>
-              <p>• Knockout stage generation uses Group Standings data</p>
+
+          <div className="grid sm:grid-cols-2 gap-6">
+            <div className="card p-5">
+              <h3 className="font-display text-lg text-[var(--text-primary)] mb-4">QUICK ACTIONS</h3>
+              <div className="space-y-2">
+                <ActionButton
+                  label="Recalculate All Points"
+                  icon="🔄"
+                  loading={loadingAction === 'recalc'}
+                  onClick={() => doAction('recalc', () => api.post('/admin/recalculate-points'), 'Points recalculated!')}
+                />
+                <ActionButton
+                  label="Recalculate Standings"
+                  icon="📊"
+                  loading={loadingAction === 'standings'}
+                  onClick={() => doAction('standings', () => api.post('/admin/recalculate-standings'), 'Standings recalculated!')}
+                />
+              </div>
+            </div>
+
+            <div className="card p-5">
+              <h3 className="font-display text-lg text-[var(--text-primary)] mb-4">KNOCKOUT STAGE</h3>
+              {stats?.knockoutButton?.action === 'complete' && (
+                <p className="text-sm text-green-500 font-medium mb-4">
+                  🏆 The tournament is complete!
+                </p>
+              )}
+              {stats?.knockoutButton && stats.knockoutButton.action !== 'complete' && (
+                stats.knockoutButton.action === 'setup' ? (
+                  <button
+                    onClick={() => !stats.knockoutButton.disabled && navigate('/admin/knockout-setup')}
+                    disabled={stats.knockoutButton.disabled}
+                    className={`flex items-center gap-2 w-full justify-center px-4 py-2 rounded-xl font-medium text-sm transition-all ${
+                      stats.knockoutButton.disabled
+                        ? 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] cursor-not-allowed opacity-60'
+                        : 'btn-primary'
+                    }`}
+                  >
+                    ⚽ {stats.knockoutButton.label}
+                  </button>
+                ) : (
+                  <button
+                    disabled={stats.knockoutButton.disabled || loadingAction === 'gen-knockout'}
+                    onClick={() => {
+                      if (stats.knockoutButton.disabled) return;
+                      doAction(
+                        'gen-knockout',
+                        () => api.post('/admin/generate-knockout/auto'),
+                        `${stats.knockoutButton.label} generated!`,
+                      ).then(() => {
+                        api.get('/admin/stats').then((res) => setStats(res.data.stats));
+                      });
+                    }}
+                    className={`flex items-center gap-2 w-full justify-center px-4 py-2 rounded-xl font-medium text-sm transition-all ${
+                      stats.knockoutButton.disabled
+                        ? 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] cursor-not-allowed opacity-60'
+                        : 'btn-primary'
+                    }`}
+                  >
+                    {loadingAction === 'gen-knockout' ? <Spinner size="sm" /> : '⚡'}
+                    {stats.knockoutButton.label}
+                  </button>
+                )
+              )}
             </div>
           </div>
         </div>
       )}
 
-      {/* Fixtures & Results */}
+      {/* Fixtures */}
       {tab === 'fixtures' && (
         <div className="space-y-4">
-          {/* Filters */}
-          <div className="card p-4 flex flex-wrap gap-3 items-end">
-            <div>
-              <label className="text-xs text-[var(--text-secondary)] mb-1 block">Status</label>
-              <select
-                value={fixtureFilter.status}
-                onChange={(e) => setFixtureFilter((f) => ({ ...f, status: e.target.value }))}
-                className="px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg-secondary)] text-[var(--text-primary)] text-sm focus:outline-none focus:border-primary-500"
-              >
-                <option value="">All Statuses</option>
-                <option value="upcoming">Upcoming</option>
-                <option value="completed">Completed</option>
-              </select>
-            </div>
-            <div>
-              <label className="text-xs text-[var(--text-secondary)] mb-1 block">Stage</label>
-              <select
-                value={fixtureFilter.stage}
-                onChange={(e) => setFixtureFilter((f) => ({ ...f, stage: e.target.value }))}
-                className="px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg-secondary)] text-[var(--text-primary)] text-sm focus:outline-none focus:border-primary-500"
-              >
-                <option value="">All Stages</option>
-                {Object.entries(STAGE_LABELS).map(([val, label]) => (
-                  <option key={val} value={val}>{label}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="text-xs text-[var(--text-secondary)] mb-1 block">Group</label>
-              <select
-                value={fixtureFilter.group}
-                onChange={(e) => setFixtureFilter((f) => ({ ...f, group: e.target.value }))}
-                className="px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg-secondary)] text-[var(--text-primary)] text-sm focus:outline-none focus:border-primary-500"
-              >
-                <option value="">All Groups</option>
-                {'ABCDEFGHIJKL'.split('').map((g) => (
-                  <option key={g} value={g}>Group {g}</option>
-                ))}
-              </select>
-            </div>
-            <button onClick={loadFixtures} className="btn-secondary text-sm flex items-center gap-2">
-              {loadingFixtures ? <Spinner size="sm" /> : '🔍'} Filter
-            </button>
+          <div className="card p-4 flex flex-wrap gap-3">
+            <select
+              value={fixtureFilter.status}
+              onChange={(e) => setFixtureFilter((f) => ({ ...f, status: e.target.value }))}
+              className="px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg-secondary)] text-[var(--text-primary)] text-sm focus:outline-none"
+            >
+              <option value="">All Statuses</option>
+              <option value="upcoming">Upcoming</option>
+              <option value="completed">Completed</option>
+            </select>
+            <select
+              value={fixtureFilter.stage}
+              onChange={(e) => setFixtureFilter((f) => ({ ...f, stage: e.target.value }))}
+              className="px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg-secondary)] text-[var(--text-primary)] text-sm focus:outline-none"
+            >
+              <option value="">All Stages</option>
+              {Object.entries(STAGE_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+            </select>
+            <select
+              value={fixtureFilter.group}
+              onChange={(e) => setFixtureFilter((f) => ({ ...f, group: e.target.value }))}
+              className="px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg-secondary)] text-[var(--text-primary)] text-sm focus:outline-none"
+            >
+              <option value="">All Groups</option>
+              {['A','B','C','D','E','F','G','H','I','J','K','L'].map((g) => <option key={g}>{g}</option>)}
+            </select>
           </div>
 
-          {/* Fixtures list */}
           <div className="card overflow-hidden">
             <div className="px-4 py-3 bg-[var(--bg-secondary)] border-b border-[var(--border)] flex items-center justify-between">
-              <span className="text-sm font-semibold text-[var(--text-secondary)]">
-                {fixtures.length} FIXTURE{fixtures.length !== 1 ? 'S' : ''}
-              </span>
-              <span className="text-xs text-[var(--text-secondary)]">Click "Enter Result" to set final score</span>
+              <span className="text-sm font-semibold text-[var(--text-secondary)]">{fixtures.length} FIXTURES</span>
+              {loadingFixtures && <Spinner size="sm" />}
             </div>
-
-            {loadingFixtures ? (
-              <div className="p-12 flex justify-center"><Spinner /></div>
-            ) : fixtures.length === 0 ? (
-              <div className="p-8 text-center text-[var(--text-secondary)]">No fixtures found</div>
-            ) : (
-              <div className="divide-y divide-[var(--border)]">
-                {fixtures.map((fixture) => {
-                  const home = fixture.homeTeam;
-                  const away = fixture.awayTeam;
-                  const hasResult = fixture.result?.homeScore !== null && fixture.result?.homeScore !== undefined;
-                  const kickoff = new Date(fixture.matchDatetime);
-
-                  return (
-                    <div key={fixture._id} className="px-4 py-4 hover:bg-[var(--bg-secondary)] transition-colors">
-                      <div className="flex items-center gap-3 flex-wrap">
-                        {/* Date + stage */}
-                        <div className="text-xs text-[var(--text-secondary)] w-24 flex-shrink-0">
-                          <div className="font-medium">{kickoff.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</div>
-                          <div>{kickoff.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}</div>
-                          <div className="mt-0.5 text-[10px]">{STAGE_LABELS[fixture.stage] || fixture.stage}{fixture.group ? ` · Grp ${fixture.group}` : ''}</div>
-                        </div>
-
-                        {/* Teams + score */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            {home?.flagUrl && <img src={home.flagUrl} alt="" className="w-5 h-5 rounded-full object-cover flex-shrink-0" onError={(e) => { e.target.style.display = 'none'; }} />}
-                            <span className="font-medium text-sm text-[var(--text-primary)] truncate">{home?.name}</span>
-                          </div>
-                          <div className="flex items-center gap-2 mt-1">
-                            {away?.flagUrl && <img src={away.flagUrl} alt="" className="w-5 h-5 rounded-full object-cover flex-shrink-0" onError={(e) => { e.target.style.display = 'none'; }} />}
-                            <span className="font-medium text-sm text-[var(--text-primary)] truncate">{away?.name}</span>
-                          </div>
-                        </div>
-
-                        {/* Score display */}
-                        <div className="text-center w-16 flex-shrink-0">
-                          {hasResult ? (
-                              <div>
-                                <div className="font-display text-xl text-[var(--text-primary)]">
-                                  {fixture.result.homeScore} – {fixture.result.awayScore}
-                                </div>
-
-                                {/* Penalty shootout */}
-                                {fixture.result.penalties === true &&
-                                fixture.result.penaltyHomeScore != null &&
-                                fixture.result.penaltyAwayScore != null && (
-                                  <div className="text-[10px] text-[var(--text-secondary)]">
-                                    pens ({fixture.result.penaltyHomeScore}–{fixture.result.penaltyAwayScore})
-                                  </div>
-                                )}
-
-                                {/* Extra time but no penalties */}
-                                {fixture.result.extraTime === true &&
-                                fixture.result.penalties !== true && (
-                                  <div className="text-[10px] text-[var(--text-secondary)]">AET</div>
-                                )}
-
-                                {/* Winner indicator for knockout matches */}
-                                {fixture.result.winner && fixture.result.winner !== 'draw' && (
-                                  <div className="text-[10px] text-primary-500 font-medium">
-                                    {fixture.result.winner === 'home'
-                                      ? `${fixture.homeTeam?.shortName} win`
-                                      : `${fixture.awayTeam?.shortName} win`}
-                                  </div>
-                                )}
-                              </div>
-                          ) : (
-                            <span className="text-[var(--text-secondary)] text-sm">vs</span>
-                          )}
-                        </div>
-
-                        {/* Status badge */}
-                        <div className="flex-shrink-0">
-                          <span className={`text-[10px] font-semibold px-2 py-1 rounded-full uppercase ${STATUS_BADGE[fixture.status] || ''}`}>
-                            {fixture.status}
-                          </span>
-                        </div>
-
-                        {/* Action */}
-                        <button
-                          onClick={() => setSelectedFixture(fixture)}
-                          className={`flex-shrink-0 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${
-                            hasResult
-                              ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400'
-                              : 'btn-primary text-xs py-1.5 px-3'
-                          }`}
-                        >
-                          {hasResult ? '✏️ Edit Result' : '⚽ Enter Result'}
-                        </button>
-                      </div>
-
-                      {/* Points calculated badge */}
-                      {fixture.scoresCalculated && (
-                        <div className="mt-2 text-[10px] text-green-600 dark:text-green-400">
-                          ✓ Points calculated
-                        </div>
+            <div className="divide-y divide-[var(--border)] max-h-[36rem] overflow-y-auto">
+              {fixtures.map((f) => (
+                <div key={f._id} className="flex items-center gap-3 px-4 py-3 hover:bg-[var(--bg-secondary)] transition-colors">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="font-medium text-[var(--text-primary)] truncate">
+                        {f.homeTeam?.shortName || f.homeTeam?.name}
+                      </span>
+                      {f.status === 'completed' ? (
+                        <span className="font-display text-base text-[var(--text-primary)] px-1">
+                          {f.result?.homeScore} – {f.result?.awayScore}
+                        </span>
+                      ) : (
+                        <span className="text-[var(--text-secondary)] px-1">vs</span>
                       )}
+                      <span className="font-medium text-[var(--text-primary)] truncate">
+                        {f.awayTeam?.shortName || f.awayTeam?.name}
+                      </span>
                     </div>
-                  );
-                })}
-              </div>
-            )}
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-xs text-[var(--text-secondary)]">
+                        {STAGE_LABELS[f.stage]} · {new Date(f.matchDatetime).toLocaleDateString()}
+                      </span>
+                      <span className={`badge text-xs ${STATUS_BADGE[f.status] || 'badge-gray'}`}>
+                        {f.status}
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setSelectedFixture(f)}
+                    className="btn-secondary text-xs px-3 py-1.5 flex-shrink-0"
+                  >
+                    {f.status === 'completed' ? 'Edit' : 'Set Result'}
+                  </button>
+                </div>
+              ))}
+              {!loadingFixtures && fixtures.length === 0 && (
+                <div className="p-8 text-center text-[var(--text-secondary)]">No fixtures found</div>
+              )}
+            </div>
           </div>
         </div>
       )}
 
-      {/* Tools (formerly Sync & Tools) */}
+      {/* Tools */}
       {tab === 'sync' && (
         <div className="grid sm:grid-cols-2 gap-6">
-          <div className="card p-6">
-            <h3 className="font-display text-xl text-[var(--text-primary)] mb-4">RECALCULATE</h3>
-            <div className="space-y-3">
-              <ActionButton label="Recalculate All Points" icon="🔢"
-                loading={loadingAction === 'recalc-points'}
-                onClick={() => doAction('recalc-points', () => api.post('/admin/recalculate-points'), 'Points recalculated!')} />
-              <ActionButton label="Recalculate Group Standings" icon="📊"
-                loading={loadingAction === 'recalc-standings'}
-                onClick={() => doAction('recalc-standings', () => api.post('/admin/recalculate-standings'), 'Standings updated!')} />
-            </div>
+          <div className="card p-5 space-y-3">
+            <h3 className="font-display text-lg text-[var(--text-primary)]">SCORING</h3>
+            <ActionButton
+              label="Recalculate All Points"
+              icon="🔄"
+              loading={loadingAction === 'recalc'}
+              onClick={() => doAction('recalc', () => api.post('/admin/recalculate-points'), 'Points recalculated!')}
+            />
           </div>
-
-          {/* Tools tab — replace the existing knockout card with this */}
-            <div className="card p-6">
-                <h3 className="font-display text-xl text-[var(--text-primary)] mb-3">
-                  KNOCKOUT STAGE
-                </h3>
-
-                {/* Progress indicator */}
-                {stats?.knockoutButton && (
-                  <div className="mb-4">
-                    {['Group Stage', 'Round of 32', 'Round of 16', 'Quarterfinal', 'Semifinal', 'Final'].map((stage, i) => {
-                      const stageKeys = ['group_stage', 'round_of_32', 'round_of_16', 'quarterfinal', 'semifinal', 'final'];
-                      // Determine status from knockoutButton label
-                      const labelStages = {
-                        'Set Up Round of 32':        0,
-                        'Generate Round of 16':      1,
-                        'Generate Quarterfinal':     2,
-                        'Generate Semifinal':        3,
-                        'Generate Final + Third Place': 4,
-                        'Tournament Complete 🏆':    5,
-                      };
-                      const currentIdx = labelStages[stats.knockoutButton.label] ?? 0;
-                      const isDone     = i < currentIdx;
-                      const isCurrent  = i === currentIdx;
-
-                      return (
-                        <div key={stage} className="flex items-center gap-2 mb-1">
-                          <div className={`w-4 h-4 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] ${
-                            isDone    ? 'bg-green-500 text-white' :
-                            isCurrent ? 'bg-primary-500 text-white' :
-                            'bg-[var(--border)] text-[var(--text-secondary)]'
-                          }`}>
-                            {isDone ? '✓' : i + 1}
-                          </div>
-                          <span className={`text-xs ${
-                            isDone    ? 'text-green-500 line-through' :
-                            isCurrent ? 'text-[var(--text-primary)] font-medium' :
-                            'text-[var(--text-secondary)]'
-                          }`}>
-                            {stage}
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-
-                {/* Disabled reason */}
-                {stats?.knockoutButton?.disabled && stats.knockoutButton.reason && (
-                  <p className="text-xs text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-900/20 px-3 py-2 rounded-lg mb-4">
-                    ⏳ {stats.knockoutButton.reason}
-                  </p>
-                )}
-
-                {/* Tournament complete */}
-                {stats?.knockoutButton?.action === 'complete' && (
-                  <p className="text-sm text-green-500 font-medium mb-4">
-                    🏆 The tournament is complete!
-                  </p>
-                )}
-
-                {/* The button — always rendered, disabled when needed */}
-                {stats?.knockoutButton && stats.knockoutButton.action !== 'complete' && (
-                  stats.knockoutButton.action === 'setup' ? (
-                    <button
-                      onClick={() => !stats.knockoutButton.disabled && navigate('/admin/knockout-setup')}
-                      disabled={stats.knockoutButton.disabled}
-                      className={`flex items-center gap-2 w-full justify-center px-4 py-2 rounded-xl font-medium text-sm transition-all ${
-                        stats.knockoutButton.disabled
-                          ? 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] cursor-not-allowed opacity-60'
-                          : 'btn-primary'
-                      }`}
-                    >
-                      ⚽ {stats.knockoutButton.label}
-                    </button>
-                  ) : (
-                    <button
-                      disabled={stats.knockoutButton.disabled || loadingAction === 'gen-knockout'}
-                      onClick={() => {
-                        if (stats.knockoutButton.disabled) return;
-                        doAction(
-                          'gen-knockout',
-                          () => api.post('/admin/generate-knockout/auto'),
-                          `${stats.knockoutButton.label} generated!`,
-                        ).then(() => {
-                          api.get('/admin/stats').then((res) => setStats(res.data.stats));
-                        });
-                      }}
-                      className={`flex items-center gap-2 w-full justify-center px-4 py-2 rounded-xl font-medium text-sm transition-all ${
-                        stats.knockoutButton.disabled
-                          ? 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] cursor-not-allowed opacity-60'
-                          : 'btn-primary'
-                      }`}
-                    >
-                      {loadingAction === 'gen-knockout' ? <Spinner size="sm" /> : '⚡'}
-                      {stats.knockoutButton.label}
-                    </button>
-                  )
-                )}
-
-                {/* Round of 32 Management */}
-                  {stats?.roundOf32Exists && (
-                    <div className="mt-4 pt-4 border-t border-[var(--border)]">
-                      <h4 className="text-sm font-semibold text-[var(--text-primary)] mb-3">
-                        ROUND OF 32 MANAGEMENT
-                      </h4>
-
-                      <div className="grid grid-cols-2 gap-2">
-                        <button
-                          onClick={() => navigate('/admin/knockout-setup')}
-                          className="btn-secondary"
-                        >
-                          ✏️ Edit Round of 32
-                        </button>
-
-                        <button
-                          disabled={loadingAction === 'reset-r32'}
-                          onClick={() => {
-                            if (
-                              !window.confirm(
-                                'Reset Round of 32? This will remove all Round of 32 fixtures.'
-                              )
-                            ) {
-                              return;
-                            }
-
-                            doAction(
-                              'reset-r32',
-                              () =>
-                                api.delete(
-                                  '/admin/generate-knockout/round-of-32'
-                                ),
-                              'Round of 32 reset!'
-                            ).then(() => {
-                              api.get('/admin/stats').then((res) => {
-                                setStats(res.data.stats);
-                              });
-                            });
-                          }}
-                          className="btn-secondary"
-                        >
-                          {loadingAction === 'reset-r32'
-                            ? 'Resetting...'
-                            : '🗑️ Reset Round of 32'}
-                        </button>
-                      </div>
-                    </div>
-                  )}
-              </div>
+          <div className="card p-5 space-y-3">
+            <h3 className="font-display text-lg text-[var(--text-primary)]">STANDINGS</h3>
+            <ActionButton
+              label="Recalculate Group Standings"
+              icon="📊"
+              loading={loadingAction === 'standings'}
+              onClick={() => doAction('standings', () => api.post('/admin/recalculate-standings'), 'Standings recalculated!')}
+            />
+          </div>
         </div>
       )}
 
@@ -670,11 +627,11 @@ export default function AdminPage() {
             <h3 className="font-display text-xl text-[var(--text-primary)] mb-4">ADD TEAM</h3>
             <form onSubmit={handleCreateTeam} className="grid sm:grid-cols-3 gap-3">
               {[
-                { key: 'name',      label: 'Full Name',     placeholder: 'Brazil',                   required: true },
-                { key: 'shortName', label: 'Short Name',    placeholder: 'BRA' },
+                { key: 'name',      label: 'Full Name',        placeholder: 'Brazil',                   required: true },
+                { key: 'shortName', label: 'Short Name',       placeholder: 'BRA' },
                 { key: 'code',      label: 'Code (3 letters)', placeholder: 'BRA' },
-                { key: 'group',     label: 'Group',         placeholder: 'A' },
-                { key: 'flagUrl',   label: 'Flag URL',      placeholder: 'https://flagcdn.com/br.svg' },
+                { key: 'group',     label: 'Group',            placeholder: 'A' },
+                { key: 'flagUrl',   label: 'Flag URL',         placeholder: 'https://flagcdn.com/br.svg' },
               ].map((field) => (
                 <div key={field.key}>
                   <label className="text-xs text-[var(--text-secondary)] mb-1 block">{field.label}</label>
@@ -770,6 +727,16 @@ export default function AdminPage() {
             )}
           </div>
         </div>
+      )}
+
+      {/* Leagues */}
+      {tab === 'leagues' && (
+        <LeaguesAdminTab
+          leagues={leagues}
+          leaguesLoading={leaguesLoading}
+          leagueSearch={leagueSearch}
+          setLeagueSearch={setLeagueSearch}
+        />
       )}
 
       {/* Result Modal */}
