@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import Select from 'react-select';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import toast from 'react-hot-toast';
@@ -25,33 +26,76 @@ const R32_SLOTS = [
   { matchNumber: 88,  label: 'Match 88', date: d('2026-07-04T07:15'),  },
 ];
 
-const FLAG_MAP = {
-  MEX:'🇲🇽', ECU:'🇪🇨', SEN:'🇸🇳', NZL:'🇳🇿', ARG:'🇦🇷', EGY:'🇪🇬',
-  RSA:'🇿🇦', UKR:'🇺🇦', USA:'🇺🇸', PAN:'🇵🇦', ALB:'🇦🇱', CMR:'🇨🇲',
-  FRA:'🇫🇷', NED:'🇳🇱', KSA:'🇸🇦', VEN:'🇻🇪', ESP:'🇪🇸', BRA:'🇧🇷',
-  SRB:'🇷🇸', NGA:'🇳🇬', POR:'🇵🇹', GER:'🇩🇪', CRC:'🇨🇷', MOZ:'🇲🇿',
-  ENG:'🏴󠁧󠁢󠁥󠁮󠁧󠁿', COL:'🇨🇴', SNG:'🇸🇳', SVK:'🇸🇰', JPN:'🇯🇵', KOR:'🇰🇷',
-  BEL:'🇧🇪', MLI:'🇲🇱', CAN:'🇨🇦', MAR:'🇲🇦', CRO:'🇭🇷', AUS:'🇦🇺',
-  URU:'🇺🇾', IRN:'🇮🇷', SUI:'🇨🇭', CIV:'🇨🇮', DEN:'🇩🇰', PAR:'🇵🇾',
-  CUB:'🇨🇺', QAT:'🇶🇦', POL:'🇵🇱', AUT:'🇦🇹', CHI:'🇨🇱', IDN:'🇮🇩',
-};
 
-const getFlagEmoji = (code) => FLAG_MAP[code] || '🏳';
+
 
 function TeamSelect({ value, onChange, teams, excludeId }) {
+  const options = teams
+    .filter((t) => t._id !== excludeId)
+    .map((t) => ({
+      value: t._id,
+      label: t.name,
+      flagUrl: t.flagUrl,
+    }));
+
+  const selectedOption =
+    options.find((option) => option.value === value) || null;
+
   return (
-    <select
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className="w-full px-2 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--bg-secondary)] text-[var(--text-primary)] text-sm focus:outline-none focus:border-primary-500"
-    >
-      <option value="">Select team…</option>
-      {teams.map((t) => (
-        <option key={t._id} value={t._id} disabled={t._id === excludeId}>
-          {t.flag} {t.name} ({t.code})
-        </option>
-      ))}
-    </select>
+    <Select
+    value={selectedOption}
+    onChange={(selected) => onChange(selected?.value || '')}
+    options={options}
+    placeholder="Select team..."
+    isSearchable
+    menuPortalTarget={document.body}
+    formatOptionLabel={(option) => (
+      <div className="flex items-center gap-2">
+        <img
+          src={option.flagUrl}
+          alt=""
+          className="w-5 h-5 rounded-sm object-cover flex-shrink-0"
+        />
+        <span>{option.label}</span>
+      </div>
+    )}
+    styles={{
+      control: (base) => ({
+        ...base,
+        minHeight: 42,
+        backgroundColor: 'var(--bg-secondary)',
+        borderColor: 'var(--border)',
+      }),
+
+      menuPortal: (base) => ({
+        ...base,
+        zIndex: 9999,
+      }),
+
+      menu: (base) => ({
+        ...base,
+        backgroundColor: 'var(--bg-secondary)',
+      }),
+
+      singleValue: (base) => ({
+        ...base,
+        color: 'var(--text-primary)',
+      }),
+
+      input: (base) => ({
+        ...base,
+        color: 'var(--text-primary)',
+      }),
+
+      option: (base, state) => ({
+        ...base,
+        backgroundColor: state.isFocused
+          ? 'var(--bg-primary)'
+          : 'var(--bg-secondary)',
+        color: 'var(--text-primary)',
+      }),
+    }}
+  />
   );
 }
 
@@ -82,8 +126,10 @@ export default function KnockoutSetupPage() {
         ]);
 
         const sorted = (teamsRes.data.teams || [])
-          .sort((a, b) => (a.group || '').localeCompare(b.group || '') || a.name.localeCompare(b.name))
-          .map((t) => ({ ...t, flag: getFlagEmoji(t.code) }));
+          .sort((a, b) =>
+            (a.group || '').localeCompare(b.group || '') ||
+            a.name.localeCompare(b.name)
+          );
 
         setTeams(sorted);
 
@@ -343,13 +389,37 @@ export default function KnockoutSetupPage() {
                 {!editMode ? (
                   <div className="flex items-center gap-3 flex-1">
                     <div className="flex items-center gap-2">
-                      <span className="text-lg">{homeTeam ? getFlagEmoji(homeTeam.code) : '🏳'}</span>
-                      <span className="font-medium text-sm text-[var(--text-primary)]">{homeTeam?.name || '—'}</span>
+                      {homeTeam?.flagUrl ? (
+                        <img
+                          src={homeTeam.flagUrl}
+                          alt={homeTeam.name}
+                          className="w-6 h-6 rounded-sm object-cover"
+                        />
+                      ) : (
+                        <span className="text-lg">🏳</span>
+                      )}
+                      <span className="font-medium text-sm text-[var(--text-primary)]">
+                        {homeTeam?.name || '—'}
+                      </span>
                     </div>
-                    <span className="text-[var(--text-secondary)] font-display text-sm">vs</span>
+
+                    <span className="text-[var(--text-secondary)] font-display text-sm">
+                      vs
+                    </span>
+
                     <div className="flex items-center gap-2">
-                      <span className="text-lg">{awayTeam ? getFlagEmoji(awayTeam.code) : '🏳'}</span>
-                      <span className="font-medium text-sm text-[var(--text-primary)]">{awayTeam?.name || '—'}</span>
+                      {awayTeam?.flagUrl ? (
+                        <img
+                          src={awayTeam.flagUrl}
+                          alt={awayTeam.name}
+                          className="w-6 h-6 rounded-sm object-cover"
+                        />
+                      ) : (
+                        <span className="text-lg">🏳</span>
+                      )}
+                      <span className="font-medium text-sm text-[var(--text-primary)]">
+                        {awayTeam?.name || '—'}
+                      </span>
                     </div>
                   </div>
                 ) : (
