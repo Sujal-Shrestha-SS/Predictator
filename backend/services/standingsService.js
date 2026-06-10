@@ -112,8 +112,24 @@ const getAllGroupStandings = async () => {
   }, {});
 };
 
+// Get best 8 third-placed teams
+const getBestThirdPlacedTeams = async () => {
+  return GroupStanding.find({
+    position: 3
+  })
+    .populate('team', 'name shortName logo flagUrl code')
+    .sort({
+      points: -1,
+      goalDifference: -1,
+      goalsFor: -1
+    })
+    .limit(8);
+};
+
+
 module.exports = {
   recalculateGroupStandings,
   getGroupStandings,
   getAllGroupStandings,
+  getBestThirdPlacedTeams,
 };
