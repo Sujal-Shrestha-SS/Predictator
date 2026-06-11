@@ -164,7 +164,7 @@ export default function PredictionForm({ fixture, existingPrediction, onSuccess 
 
         {/* Points guide */}
         <div className="bg-[var(--bg-secondary)] rounded-xl p-3 mb-4 text-xs text-[var(--text-secondary)] grid grid-cols-3 gap-2 text-center">
-          <div><span className="font-semibold text-green-500">30 pts</span><br />Exact score</div>
+          <div><span className="font-semibold text-green-500">50 pts</span><br />Exact score</div>
           <div><span className="font-semibold text-blue-500">20 pts</span><br />Correct winner</div>
           <div><span className="font-semibold text-yellow-500">15 pts</span><br />Correct draw</div>
         </div>
