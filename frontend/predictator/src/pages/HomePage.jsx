@@ -23,14 +23,15 @@ export default function HomePage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [upcomingRes, liveRes, top3Res] = await Promise.all([
+        const requests = [
           api.get('/fixtures/upcoming?limit=6'),
           api.get('/fixtures/live'),
-          api.get('/leaderboard/top3'),
-        ]);
+          ...(user ? [api.get('/leaderboard/top3')] : []),
+        ];
+        const [upcomingRes, liveRes, top3Res] = await Promise.all(requests);
         setUpcoming(upcomingRes.data.fixtures || []);
         setLive(liveRes.data.fixtures || []);
-        setTop3(top3Res.data.top3 || []);
+        setTop3(top3Res?.data.top3 || []);
       } catch (err) {
         console.error('Failed to fetch home data', err);
       } finally {
@@ -121,9 +122,16 @@ export default function HomePage() {
           <div className="card p-5">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-display text-xl text-[var(--text-primary)]">TOP PREDICTORS</h3>
-              <Link to="/leaderboard" className="text-xs text-primary-500 hover:underline">Full board →</Link>
+              {user && <Link to="/leaderboard" className="text-xs text-primary-500 hover:underline">Full board →</Link>}
             </div>
-            {loading ? (
+            {!user ? (
+              <div className="text-center py-6">
+                <div className="text-4xl mb-3">🏆</div>
+                <p className="text-sm font-medium text-[var(--text-primary)] mb-1">Sign in to view rankings</p>
+                <p className="text-xs text-[var(--text-secondary)] mb-4">See who's leading the prediction table</p>
+                <Link to="/login" className="btn-primary text-sm">Sign In</Link>
+              </div>
+            ) : loading ? (
               <div className="space-y-3">
                 {[...Array(3)].map((_, i) => (
                   <div key={i} className="flex items-center gap-3 animate-pulse">
