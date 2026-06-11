@@ -51,7 +51,7 @@ const AppRoutes = () => (
       <Route path="login" element={<PublicOnlyRoute><LoginPage /></PublicOnlyRoute>} />
       <Route path="fixtures" element={<FixturesPage />} />
       <Route path="fixtures/:id" element={<MatchDetailPage />} />
-      <Route path="leaderboard" element={<LeaderboardPage />} />
+      <Route path="leaderboard" element={<ProtectedRoute><LeaderboardPage /></ProtectedRoute>} />
       <Route path="standings" element={<StandingsPage />} />
       <Route path="predictions" element={<ProtectedRoute><MyPredictionsPage /></ProtectedRoute>} />
       <Route path="profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
