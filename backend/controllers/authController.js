@@ -59,7 +59,6 @@ if (!user) {
 } else {
   user.email = email;
   user.avatar = picture;
-  user.role = role;
   user.lastLoginAt = new Date();
 
   // IMPORTANT:
