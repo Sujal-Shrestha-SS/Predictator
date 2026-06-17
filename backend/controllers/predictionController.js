@@ -54,7 +54,7 @@ const submitPrediction = asyncHandler(async (req, res) => {
 
 // GET /api/predictions/my
 const getMyPredictions = asyncHandler(async (req, res) => {
-  const { page = 1, limit = 20, stage } = req.query;
+  const { page = 1, limit = 200, stage } = req.query;
   const skip = (parseInt(page) - 1) * parseInt(limit);
 
   const predictionFilter = { user: req.user._id };
