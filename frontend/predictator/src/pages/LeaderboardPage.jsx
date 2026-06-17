@@ -75,32 +75,32 @@ export default function LeaderboardPage() {
 
       {/* Top 3 podium (first page only) */}
       {page === 1 && !loading && leaderboard.length >= 3 && (
-        <div className="grid grid-cols-3 gap-3 mb-8">
-          {[leaderboard[1], leaderboard[0], leaderboard[2]].map((entry, idx) => {
-            if (!entry) return null;
-            const podiumRank = idx === 0 ? 2 : idx === 1 ? 1 : 3;
-            const heights = { 1: 'h-28', 2: 'h-20', 3: 'h-16' };
-            const colors = {
-              1: 'from-yellow-400 to-yellow-600',
-              2: 'from-gray-300 to-gray-500',
-              3: 'from-amber-600 to-amber-800',
-            };
-            return (
-              <div key={entry.id} className="text-center">
-                <img
-                  src={entry.avatar || `https://ui-avatars.com/api/?name=${entry.username}&background=2244f5&color=fff&size=48`}
-                  alt={entry.username}
-                  className="w-14 h-14 rounded-full border-4 border-white dark:border-gray-800 mx-auto mb-2 shadow-lg"
-                />
-                <p className="text-sm font-semibold text-[var(--text-primary)] truncate px-2">{entry.username}</p>
-                <p className="text-xs font-mono text-[var(--text-secondary)] mb-2">{entry.totalPoints} pts</p>
-                <div className={`bg-gradient-to-t ${colors[podiumRank]} rounded-t-xl ${heights[podiumRank]} flex items-end justify-center pb-2`}>
-                  <span className="text-white font-display text-xl">#{podiumRank}</span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+            <div className="grid grid-cols-3 gap-3 mb-8 items-end">
+            {[leaderboard[1], leaderboard[0], leaderboard[2]].map((entry, idx) => {
+              if (!entry) return null;
+              const podiumRank = idx === 0 ? 2 : idx === 1 ? 1 : 3;
+              const heights = { 1: 'h-28', 2: 'h-20', 3: 'h-16' };
+              const colors = {
+                1: 'from-yellow-400 to-yellow-600',
+                2: 'from-gray-300 to-gray-500',
+                3: 'from-amber-600 to-amber-800',
+              };
+              return (
+                <div key={entry.id} className="text-center flex flex-col items-center">
+                  <img
+                    src={entry.avatar || `https://ui-avatars.com/api/?name=${entry.username}&background=2244f5&color=fff&size=48`}
+                    alt={entry.username}
+                    className="w-14 h-14 rounded-full border-4 border-white dark:border-gray-800 mb-2 shadow-lg"
+                  />
+                  <p className="text-sm font-semibold text-[var(--text-primary)] truncate px-2 w-full">{entry.username}</p>
+                  <p className="text-xs font-mono text-[var(--text-secondary)] mb-2">{entry.totalPoints} pts</p>
+                  <div className={`bg-gradient-to-t ${colors[podiumRank]} rounded-t-xl ${heights[podiumRank]} w-full flex items-end justify-center pb-2`}>
+                    <span className="text-white font-display text-xl">#{podiumRank}</span>
+                  </div>
+            </div>
+          );
+        })}
+      </div>
       )}
 
       {/* Table */}
