@@ -25,7 +25,8 @@ router.post('/recalculate-standings', triggerStandingsRecalculation);
 router.post('/generate-knockout/round-of-32', saveRoundOf32);
 router.delete('/generate-knockout/round-of-32', resetRoundOf32);
 router.post('/generate-knockout/auto', generateNextKnockoutRound);
-router.get('/fixtures', getAdminFixtures);              
+router.get('/fixtures', getAdminFixtures); 
+router.put('/fixtures/:id', authenticate, requireAdmin);             
 router.put('/fixtures/:id/result', setFixtureResult); 
 
 module.exports = router;
