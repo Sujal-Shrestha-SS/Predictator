@@ -42,6 +42,105 @@ const STATUS_BADGE = {
   completed: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
 };
 
+function EditTimeModal({ fixture, onClose, onSaved }) {
+  const kickoff = new Date(fixture.matchDatetime);
+
+  // Format for datetime-local input (needs YYYY-MM-DDTHH:mm)
+  const toLocalInput = (date) => {
+    const d = new Date(date);
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  };
+
+  const [matchDatetime, setMatchDatetime] = useState(toLocalInput(kickoff));
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async () => {
+    if (!matchDatetime) {
+      toast.error('Please select a date and time');
+      return;
+    }
+    setSaving(true);
+    try {
+      const newKickoff = new Date(matchDatetime);
+      const newDeadline = new Date(newKickoff.getTime() - 60 * 60 * 1000);
+
+      const res = await api.put(`/fixtures/${fixture._id}`, {
+        matchDatetime:     newKickoff.toISOString(),
+        predictionDeadline: newDeadline.toISOString(),
+      });
+
+      toast.success('Match time updated');
+      onSaved(res.data.fixture);
+      onClose();
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Failed to update time');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const home = fixture.homeTeam;
+  const away = fixture.awayTeam;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+      <div className="card w-full max-w-sm p-6 space-y-5">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <h2 className="font-display text-xl text-[var(--text-primary)]">EDIT MATCH TIME</h2>
+          <button onClick={onClose} className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-xl">✕</button>
+        </div>
+
+        {/* Match title */}
+        <div className="text-center text-sm text-[var(--text-secondary)]">
+          <span className="font-medium text-[var(--text-primary)]">{home?.name}</span>
+          <span className="mx-2">vs</span>
+          <span className="font-medium text-[var(--text-primary)]">{away?.name}</span>
+        </div>
+
+        {/* Current time */}
+        <div className="px-3 py-2 rounded-lg bg-[var(--bg-secondary)] text-xs text-[var(--text-secondary)]">
+          <span className="font-medium">Current: </span>
+          {new Date(fixture.matchDatetime).toLocaleString(undefined, {
+            month: 'short', day: 'numeric',
+            hour: '2-digit', minute: '2-digit',
+          })}
+        </div>
+
+        {/* New time input */}
+        <div>
+          <label className="text-xs text-[var(--text-secondary)] mb-1 block">
+            New Match Date & Time
+          </label>
+          <input
+            type="datetime-local"
+            value={matchDatetime}
+            onChange={(e) => setMatchDatetime(e.target.value)}
+            className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg-secondary)] text-[var(--text-primary)] text-sm focus:outline-none focus:border-primary-500"
+          />
+          <p className="text-[10px] text-[var(--text-secondary)] mt-1">
+            Prediction deadline will be auto-set to 1 hour before kickoff
+          </p>
+        </div>
+
+        {/* Actions */}
+        <div className="flex gap-3 pt-1">
+          <button onClick={onClose} className="btn-secondary flex-1">Cancel</button>
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="btn-primary flex-1 flex items-center justify-center gap-2"
+          >
+            {saving ? <Spinner size="sm" /> : '🕐'}
+            Update Time
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ResultModal({ fixture, onClose, onSaved }) {
   
   const [homeScore, setHomeScore] = useState(fixture.result?.homeScore ?? '');
@@ -358,6 +457,7 @@ export default function AdminPage() {
   const [leagues, setLeagues]         = useState([]);
   const [leaguesLoading, setLeaguesLoading] = useState(false);
   const [leagueSearch, setLeagueSearch] = useState('');
+  const [editTimeFixture, setEditTimeFixture] = useState(null);
 
   useEffect(() => {
     api.get('/admin/stats').then((res) => setStats(res.data.stats)).catch(() => {});
@@ -419,13 +519,24 @@ export default function AdminPage() {
     setNewTeam({ name: '', shortName: '', code: '', confederation: 'UEFA', flagUrl: '', group: '' });
   };
 
-  const handleResultSaved = (updatedFixture) => {
-    setFixtures((prev) =>
-      prev.map((f) => (f._id === updatedFixture._id ? { ...f, ...updatedFixture } : f))
-    );
-    // Refresh stats
-    api.get('/admin/stats').then((res) => setStats(res.data.stats)).catch(() => {});
-  };
+ const handleResultSaved = (updatedFixture) => {
+  setFixtures((prev) =>
+    prev.map((f) => (f._id === updatedFixture._id ? { ...f, ...updatedFixture } : f))
+  );
+
+  api.get('/admin/stats')
+    .then((res) => setStats(res.data.stats))
+    .catch(() => {});
+};
+
+
+const handleTimeSaved = (updatedFixture) => {
+  setFixtures((prev) =>
+    prev.map((f) =>
+      f._id === updatedFixture._id ? { ...f, ...updatedFixture } : f
+    )
+  );
+};
 
   const TABS = [
     { id: 'dashboard', label: ' Dashboard' },
@@ -617,17 +728,35 @@ export default function AdminPage() {
                           </span>
                         </div>
 
-                        {/* Action */}
-                        <button
-                          onClick={() => setSelectedFixture(fixture)}
-                          className={`flex-shrink-0 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${
-                            hasResult
-                              ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400'
-                              : 'btn-primary text-xs py-1.5 px-3'
-                          }`}
-                        >
-                          {hasResult ? '✏️ Edit Result' : '⚽ Enter Result'}
-                        </button>
+                        {/* Actions */}
+<div className="flex items-center gap-2 flex-shrink-0">
+
+  {/* Edit Match Time */}
+  {fixture.status !== 'completed' && (
+    <button
+      onClick={() => setEditTimeFixture(fixture)}
+      className="text-xs font-semibold px-3 py-1.5 rounded-lg
+      bg-[var(--bg-secondary)]
+      text-[var(--text-secondary)]
+      hover:text-[var(--text-primary)]"
+    >
+      🕐
+    </button>
+  )}
+
+  {/* Result */}
+  <button
+    onClick={() => setSelectedFixture(fixture)}
+    className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${
+      hasResult
+        ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400'
+        : 'btn-primary text-xs py-1.5 px-3'
+    }`}
+  >
+    {hasResult ? '✏️ Edit Result' : '⚽ Enter Result'}
+  </button>
+
+</div>
                       </div>
 
                       {/* Points calculated badge */}
@@ -930,16 +1059,29 @@ export default function AdminPage() {
           setLeagueSearch={setLeagueSearch}
         />
       )}
+
+
+      
         
 
-      {/* Result Modal */}
-      {selectedFixture && (
-        <ResultModal
-          fixture={selectedFixture}
-          onClose={() => setSelectedFixture(null)}
-          onSaved={handleResultSaved}
-        />
-      )}
+      {/* Edit Time Modal */}
+{editTimeFixture && (
+  <EditTimeModal
+    fixture={editTimeFixture}
+    onClose={() => setEditTimeFixture(null)}
+    onSaved={handleTimeSaved}
+  />
+)}
+
+
+{/* Result Modal */}
+{selectedFixture && (
+  <ResultModal
+    fixture={selectedFixture}
+    onClose={() => setSelectedFixture(null)}
+    onSaved={handleResultSaved}
+  />
+)}
     </div>
   );
 }
