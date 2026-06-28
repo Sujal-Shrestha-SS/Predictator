@@ -26,28 +26,40 @@ const GROUPS = ['', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'];
 export default function FixturesPage() {
   const [fixtures, setFixtures] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [stage, setStage] = useState('');
-  const [status, setStatus] = useState('');
+  const [status, setStatus] = useState(''); 
   const [group, setGroup] = useState('');
   const [pagination, setPagination] = useState(null);
 
   const [searchParams, setSearchParams] = useSearchParams();
 
+  // Read filters from URL
   const page = Number(searchParams.get('page')) || 1;
+  const stage = searchParams.get('stage') || '';
+  
 
+
+  // Update page while keeping filters
   const setPage = (newPage) => {
-    setSearchParams((prev) => {
-      const params = new URLSearchParams(prev);
-
-      if (newPage <= 1) {
-        params.delete('page');
-      } else {
-        params.set('page', String(newPage));
-      }
-
-      return params;
+    setSearchParams({
+      page: String(newPage),
+      stage,
+      status,
+      group,
     });
   };
+
+
+  // Update stage
+  const setStage = (newStage) => {
+    setSearchParams({
+      page: '1',
+      stage: newStage,
+      status,
+      group,
+    });
+  };
+
+
 
   const fetchFixtures = useCallback(async () => {
     setLoading(true);
@@ -66,30 +78,34 @@ export default function FixturesPage() {
 
       setFixtures(res.data.fixtures || []);
       setPagination(res.data.pagination || null);
+
     } catch (err) {
       console.error('Failed to fetch fixtures:', err);
+
     } finally {
       setLoading(false);
     }
+
   }, [page, stage, status, group]);
+
 
   useEffect(() => {
     fetchFixtures();
   }, [fetchFixtures]);
 
+
   const handleStageChange = (value) => {
     setStage(value);
-    setPage(1);
   };
+
 
   const handleStatusChange = (value) => {
     setStatus(value);
-    setPage(1);
   };
+
 
   const handleGroupChange = (value) => {
     setGroup(value);
-    setPage(1);
   };
 
   const FilterBtn = ({ label, value, current, onChange }) => (
